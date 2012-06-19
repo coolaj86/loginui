@@ -15,7 +15,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "browserDependencies": {
-    "ahr2": "2.x",
+    "ahr2": ">=2.3.0 <2.4.0",
     "bonzo": "1.x",
     "qwery": "3.x",
     "bean": "0.4.x",

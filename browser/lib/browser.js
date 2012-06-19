@@ -59,8 +59,6 @@
     };
 
     href = url.format(urlObj);
-    console.log('href[2]');
-    console.log(href);
 
     request.post(href).when(authenticatedUi);
   }
@@ -137,13 +135,8 @@
 
     // try to login as guest or user
     // if the guest token is bad, the server will respond with a different guest token
-    console.log('urlObj[0]');
-    console.log(urlObj);
-    console.log(urlObj);
     href = url.format(urlObj);
-    console.log('href[1]');
-    console.log(href);
-    request.post(url.format(urlObj)).when(authenticatedUi);
+    request.post(href).when(authenticatedUi);
     $('body').on('#js-logout', 'click', logout);
   }
 
