@@ -95,8 +95,10 @@
     }
 
     console.log(pass.length, pass.substr(0, 3));
-    console.log('client  :', pass);
-    console.log('original:', account.otp);
+    console.log('client     :', pass);
+    console.log('client+salt:', hashSecret(pass, account.salt));
+    console.log('original   :', account.otp);
+    console.log('original   :', account.passphrase);
     if ((258 === pass.length) && ('otp' === pass.substr(0, 3))) {
       console.log('looks like otp');
       if (pass.substr(3) === account.otp) {
@@ -116,19 +118,22 @@
     return account;
   }
 
-  function createUser(session, username, passphrase) {
+  function createUser(session, username, passphrase, extra) {
     var user = true
       , account
       , salt = randomString(255)
       ;
 
+    if (username && store.get(username)) {
+      username = undefined;
+    }
     while (user) {
       username = username || ('guest' + Math.floor(Math.random() * 1000000000000));
       user = store.get(username);
     }
 
     account = {
-        "secret": hashSecret(passphrase || randomString(255), salt)
+        "passphrase": hashSecret(passphrase || randomString(255), salt)
       , "username": username
       , "salt": salt
       , "createdAt": Date.now()
@@ -137,14 +142,22 @@
       , "guest": true
     };
 
+    if (extra) {
+      Object.keys(account).forEach(function (key) {
+        extra[key] = account[key];
+      });
+      account = extra;
+    }
+
     account.otp = account.otp || randomString(255);
 
-    store.set(username, account);
+    store.set(account.username, account);
     return account;
   }
 
   function addAccountInfoToSession(session, account) {
     session.username = account.username;
+    // The only valid use of secret as a property
     session.secret = 'otp' + account.otp;
     session.createdAt = account.createdAt;
     session.updatedAt = account.updatedAt;
@@ -174,25 +187,33 @@
 
   function restfullyCreateUser(req, res, next) {
     var account = req.body
+      , existingAccount
       ;
 
     if (!account) {
-      req.error('no post body');
+      res.error('no post body');
       res.json();
       return;
     }
 
     if (!account.username) {
-      req.error('no username');
+      res.error('no username');
+    } else if (store.get(account.username)) {
+      // TODO add a code for easy 'iforgot' prompt
+      // TODO the user gets the account, but it must be renamed
+      // TODO if the password matches, respond as a a login attempt
+      account.username = undefined;
+      res.error('account exists');
     }
+
     if (/^guest/i.exec(account.username)) {
-      req.error('a username may not begin with the word "guest"');
+      res.error('a username may not begin with the word "guest"');
     }
     if (!account.passphrase) {
-      req.error('no passphrase');
+      res.error('no passphrase');
     } 
 
-    account = createUser(req.session, req.body.username, req.body.passphrase);
+    account = createUser(req.session, account.username, account.passphrase, account);
     addAccountInfoToSession(req.session, account);
 
     res.json(req.session);

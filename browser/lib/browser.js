@@ -133,23 +133,30 @@
     request.post('/session').when(authenticatedUi);
   }
 
-  function attemptCreate() {
+  function attemptCreate(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    /*jshint validthis:true*/
     var obj
       , serializeToNativeTypes = true
       ;
 
     obj = serializeForm('form#js-signup', serializeToNativeTypes);
 
+    console.log('form#js-signup');
     console.log(this);
+    console.log(obj);
     request.post('/users', null, obj).when(function (err, ahr, data) {
       console.log('response to user creation');
-      console.log(data);
+      authenticatedUi(err, ahr, data);
     });
   }
 
   var cuToken;
   function checkUsername() {
     clearTimeout(cuToken);
+    $('.js-signup-submit').attr('disabled', 'disabled');
     // TODO show spinner
     cuToken = setTimeout(function () {
       var val = $('#js-signup .js-username').val()
@@ -161,6 +168,7 @@
           console.log('RED: not available');
         } else if (data.success) {
           console.log('GREEN: available');
+          $('.js-signup-submit').removeAttr('disabled');
         } else {
           console.warn("Didn't get usernames");
         }
@@ -252,6 +260,7 @@
     $('.js-login-container').addClass('css-hidden');
     $('.js-close-signup-login').addClass('css-hidden');
     $('.js-password').addClass('css-hidden');
+    $('.js-signup-submit').attr('disabled', 'disabled');
   }
 
   domReady(init);
