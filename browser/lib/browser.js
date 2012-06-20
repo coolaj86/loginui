@@ -64,7 +64,8 @@
   }
 
   function authenticatedUi(err, ahr, data) {
-    var username
+    var lastUser
+      , currentUser
       ;
 
     if (err) {
@@ -72,47 +73,147 @@
       console.error(err);
       return;
     }
+
     if (!data) {
+      // TODO resume later
       console.error('no data');
       console.error(err);
       return;
     }
 
-    store.set('login', data.result);
-    console.log('session', data.result);
+    $('.js-passphrase').forEach(function (el) {
+      $(el).val('');
+    });
+
+    lastUser = store.get('login');
+    currentUser = data.result;
+
+    store.set('login', currentUser);
 
     if (!data.success) {
-      console.log('it\'s BAD BAD BAD');
-      $('.js-unauthenticated').show();
-      $('.js-authenticated').hide();
-      return;
+      console.log('authentication failed');
+      $('.js-guest').removeClass('css-hidden');
+      $('.js-authenticated-user').addClass('css-hidden');
+
+      if (!lastUser || !/^guest/.exec(lastUser.username)) {
+        console.log('assuming the new guest account');
+      } else {
+        console.log('resuming previous guest account');
+        currentUser = lastUser;
+        store.set('login', lastUser);
+      }
+    } else {
+      $('.js-close-signup-login').addClass('css-hidden');
+      $('.js-login-container').addClass('css-hidden');
+      $('.js-signup-container').addClass('css-hidden');
     }
 
-    username = data.result.username;
-    if (/^guest/.test(username)) {
+    if (/^guest/.test(currentUser.username)) {
+      console.log('guest session', currentUser);
       // TODO change to displayname
-      $('.js-username-before').text("Welcome ");
-      $('.js-username').text("Guest");
-      $('.js-username-after').text("!");
-      $('.js-unauthenticated').show();
-      $('.js-authenticated').show();
-      username = 'guest';
+      $('.js-nickname').text("Guest" + currentUser.username.replace(/^guest/, '').substr(0, 5));
+      $('.js-guest').removeClass('css-hidden');
+      $('.js-authenticated-user').addClass('css-hidden');
       return;
     }
 
-    $('.js-unauthenticated').hide();
-    $('.js-authenticated').show();
-    console.log('nick:', username);
-    $('.js-username-before').text("Not ");
-    $('.js-username').text(username);
-      $('.js-username-after').text("?");
+    console.log('user session', currentUser);
+
+    $('.js-guest').addClass('css-hidden');
+    $('.js-authenticated-user').removeClass('css-hidden');
+
+    $('.js-nickname').text(currentUser.nickname || currentUser.username);
   }
 
   function logout(ev) {
     ev.preventDefault();
     ev.stopPropagation();
 
-    $('.js-unauthenticated').show();
+    // effectively overwrites the current session
+    request.post('/session').when(authenticatedUi);
+  }
+
+  function attemptCreate() {
+    var obj
+      , serializeToNativeTypes = true
+      ;
+
+    obj = serializeForm('form#js-signup', serializeToNativeTypes);
+
+    console.log(this);
+    request.post('/users', null, obj).when(function (err, ahr, data) {
+      console.log('response to user creation');
+      console.log(data);
+    });
+  }
+
+  var cuToken;
+  function checkUsername() {
+    clearTimeout(cuToken);
+    // TODO show spinner
+    cuToken = setTimeout(function () {
+      var val = $('#js-signup .js-username').val()
+        ;
+
+      // TODO hide spinner
+      request.get('/users/' + val).when(function (err, ahr, data) {
+        if (data.result) {
+          console.log('RED: not available');
+        } else if (data.success) {
+          console.log('GREEN: available');
+        } else {
+          console.warn("Didn't get usernames");
+        }
+      });
+    }, 750);
+  }
+
+  function showLogin() {
+    $('.js-close-signup-login').removeClass('css-hidden');
+    $('.js-login-container').removeClass('css-hidden');
+    $('.js-signup-container').addClass('css-hidden');
+  }
+
+  function showSignup() {
+    $('.js-close-signup-login').removeClass('css-hidden');
+    $('.js-signup-container').removeClass('css-hidden');
+    $('.js-login-container').addClass('css-hidden');
+  }
+
+  function hideLoginSignup() {
+    $('.js-close-signup-login').addClass('css-hidden');
+    $('.js-signup-container').addClass('css-hidden');
+    $('.js-login-container').addClass('css-hidden');
+  }
+
+  function copyPassphrase() {
+    /*jshint validthis:true*/
+    var secret = $(this).val()
+      ;
+
+    $('.js-passphrase').forEach(function (el) {
+      $(el).val(secret);
+    });
+  }
+
+  function hidePassphrase(ev) {
+    /*jshint validthis:true*/
+    var hide = $(this).attr('checked')
+      ;
+
+    console.log('passphrase hidden', hide, ev, this);
+
+    $('.js-hide-passphrase').forEach(function (el) {
+      $(el).attr('checked', hide);
+    });
+
+    if (hide) {
+      $('.js-nopassword').addClass('css-hidden');
+      $('.js-password').removeClass('css-hidden');
+    } else {
+      $('.js-password').addClass('css-hidden');
+      $('.js-nopassword').removeClass('css-hidden');
+    }
   }
 
   function init() {
@@ -126,8 +227,6 @@
       , href
       ;
 
-    $('body').delegate('form#js-auth', 'submit', attemptLogin);
-    
     if (login && login.username && login.secret) {
       // TODO this should be handled as part of ahr2
       urlObj.auth = login.username + ':' + login.secret;
@@ -137,7 +236,22 @@
     // if the guest token is bad, the server will respond with a different guest token
     href = url.format(urlObj);
     request.post(href).when(authenticatedUi);
-    $('body').on('#js-logout', 'click', logout);
+
+    $('body').on('.js-logout', 'click', logout);
+    $('body').on('form#js-auth', 'submit', attemptLogin);
+    $('body').on('form#js-signup', 'submit', attemptCreate);
+    $('body').on('form#js-signup .js-username', 'keyup', checkUsername);
+    $('body').on('.js-show-signup', 'click', showSignup);
+    $('body').on('.js-show-login', 'click', showLogin);
+    $('body').on('.js-close-signup-login', 'click', hideLoginSignup);
+    $('body').on('.js-passphrase', 'keyup', copyPassphrase);
+    $('body').on('.js-hide-passphrase', 'change', hidePassphrase);
+
+    $('.js-signup-container').addClass('css-hidden');
+    $('.js-login-container').addClass('css-hidden');
+    $('.js-login-container').addClass('css-hidden');
+    $('.js-close-signup-login').addClass('css-hidden');
+    $('.js-password').addClass('css-hidden');
   }
 
   domReady(init);

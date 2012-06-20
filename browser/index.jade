@@ -9,18 +9,40 @@ html
     script(src="pakmanaged.js")
   body
     #css-body-wrapper
-      h1.
-        Login UI
+      h1 Login UI
       .js-authenticated.css-authenticated
-        a(href="#login")
-          span.js-username-before Not 
-          span.js-username johndoe
-          span.js-username-after ?
+        span.js-guest
+          span Welcome 
+          span.js-nickname Guest00000000
+          span !
+          span   
+        a.js-authenticated-user.js-logout(href="#logout")
+          span.js-nickname-pad Not 
+          span.js-nickname John Doe
+          span.js-nickname-pad ?
+        span   
+        a.js-show-login.js-guest(href="#") Login
+        span   
+        a.js-show-signup.js-guest(href="#") Create Account
+        span  
+        button.js-close-signup-login X
       .js-unauthenticated
-        form#js-auth
-          input.js-username(name="username", placeholder="i.e. john.doe@example.com")
-          input.js-passphrase(name="passphrase", type="password", placeholder="type your passphrase (shown)")
-          input.js-passphrase(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
-          span Hide Passphrase 
-          input(type="checkbox")
-          input(type="submit")
+        div.js-login-container
+          form#js-login#js-auth
+            input.js-username(name="username", placeholder="i.e. john.doe or john.doe@example.com")
+            input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
+            input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
+            span Hide Passphrase 
+            input.js-hide-passphrase(type="checkbox")
+            input(type="submit", data-action="login", value='Login')
+            a(href="#iforgot") Forgot Passphrase?
+        div.js-signup-container
+          form#js-signup
+            input.js-username(name="username", placeholder="i.e. john.doe")
+            input.js-email(type='email', name="username", placeholder="i.e. john.doe@example.com")
+            input.js-nickname(type='text', name="nickname", placeholder="i.e. John Doe")
+            input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
+            input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
+            span Hide Passphrase 
+            input.js-hide-passphrase(type="checkbox")
+            input(type="submit", data-action="signup", value='Create Account')

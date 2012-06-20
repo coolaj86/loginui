@@ -15,13 +15,15 @@
           "coolaj86": {
               "passphrase": "secret"
             , "username": "coolaj86"
-            , "otp": "0123456789abcdef"
+            , "email": "coolaj86@gmail.com"
+            , "nickname": "AJ"
+            //, "otp": "0123456789abcdef"
             , "salt": null
           }
         , "foo": {
               "passphrase": "secret"
             , "username": "foo"
-            , "otp": "0123456789abcdef"
+            //, "otp": "0123456789abcdef"
             , "salt": null
           }
       }
@@ -65,7 +67,7 @@
 
   function restfullyAuthenticateUser(req) {
     var token
-      , user
+      , username
       , pass
       , account
       , basicAuthB64
@@ -77,23 +79,23 @@
       .split(/:/) // not g
       ;
 
-    user = token.shift(); // TODO disallow ':' in username
+    username = token.shift(); // TODO disallow ':' in username
     pass = token.join(':'); // a password might have a ':'
 
-    account = store.get(user);
+    account = store.get(username);
     if (!account) {
-      console.warn('No user', user);
+      console.warn('No user', username);
       return;
     }
 
     // auto-update unsalted passwords
     if (!account.salt) {
       account.salt = randomString(255);
-      account.secret = hashSecret(account.secret, account.salt);
+      account.passphrase = hashSecret(account.passphrase, account.salt);
     }
 
     console.log(pass.length, pass.substr(0, 3));
-    console.log('client  :', pass.substr(3));
+    console.log('client  :', pass);
     console.log('original:', account.otp);
     if ((258 === pass.length) && ('otp' === pass.substr(0, 3))) {
       console.log('looks like otp');
@@ -103,14 +105,14 @@
         console.log('otp doesn\'t match');
         return;
       }
-    } else if (hashSecret(pass.substr(3), account.salt) !== account.secret) {
+    } else if (hashSecret(pass, account.salt) !== account.passphrase) {
       console.log('login+pass doesn\'t match');
       return;
     }
 
     console.log('looks like success');
     account.otp = account.otp || randomString(255);
-    store.set(user, account);
+    store.set(username, account);
     return account;
   }
 
@@ -193,7 +195,18 @@
     account = createUser(req.session, req.body.username, req.body.passphrase);
     addAccountInfoToSession(req.session, account);
 
-    req.json(req.session);
+    res.json(req.session);
+  }
+
+  function checkOrGetUser(req, res, next) {
+    // The user is NOT the authenticated user
+    if (req.session.username !== req.params.id) {
+      res.json(!!store.get(req.params.id));
+      return;
+    }
+
+    // The user IS the authenticated user
+    res.json(store.get(req.params.id));
   }
 
   function router(rest) {
@@ -204,6 +217,8 @@
     // This will create a user (and merge the guest user) and authn the session;
     rest.post('/user', restfullyCreateUser);
     rest.post('/users', restfullyCreateUser);
+
+    rest.get('/users/:id', checkOrGetUser);
   }
 
   app
