@@ -104,8 +104,8 @@
       }
     } else {
       $('.js-close-signup-login').addClass('css-hidden');
-      $('.js-login-container').addClass('css-hidden');
-      $('.js-signup-container').addClass('css-hidden');
+      $('.js-login-container').addClass('css-login-hidden');
+      $('.js-signup-container').addClass('css-login-hidden');
     }
 
     if (/^guest/.test(currentUser.username)) {
@@ -178,20 +178,20 @@
 
   function showLogin() {
     $('.js-close-signup-login').removeClass('css-hidden');
-    $('.js-login-container').removeClass('css-hidden');
-    $('.js-signup-container').addClass('css-hidden');
+    $('.js-login-container').removeClass('css-login-hidden');
+    $('.js-signup-container').addClass('css-login-hidden');
   }
 
   function showSignup() {
     $('.js-close-signup-login').removeClass('css-hidden');
-    $('.js-signup-container').removeClass('css-hidden');
-    $('.js-login-container').addClass('css-hidden');
+    $('.js-signup-container').removeClass('css-login-hidden');
+    $('.js-login-container').addClass('css-login-hidden');
   }
 
   function hideLoginSignup() {
     $('.js-close-signup-login').addClass('css-hidden');
-    $('.js-signup-container').addClass('css-hidden');
-    $('.js-login-container').addClass('css-hidden');
+    $('.js-signup-container').addClass('css-login-hidden');
+    $('.js-login-container').addClass('css-login-hidden');
   }
 
   function copyPassphrase() {
@@ -255,9 +255,9 @@
     $('body').on('.js-passphrase', 'keyup', copyPassphrase);
     $('body').on('.js-hide-passphrase', 'change', hidePassphrase);
 
-    $('.js-signup-container').addClass('css-hidden');
-    $('.js-login-container').addClass('css-hidden');
-    $('.js-login-container').addClass('css-hidden');
+    $('.js-signup-container').addClass('css-login-hidden');
+    $('.js-login-container').addClass('css-login-hidden');
+    $('.js-login-container').addClass('css-login-hidden');
     $('.js-close-signup-login').addClass('css-hidden');
     $('.js-password').addClass('css-hidden');
     $('.js-signup-submit').attr('disabled', 'disabled');
@@ -265,3 +265,4 @@
 
   domReady(init);
 }());
+
