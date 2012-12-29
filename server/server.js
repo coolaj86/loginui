@@ -8,10 +8,13 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
 
   // TODO on create pass in database with get, set, query, etc
   var steve = require('./steve')
+    , path = require('path')
     , connect = require('connect')
     , crypto = require('crypto')
     , app = connect.createServer()
-    , store = require('json-storage').create(require('dom-storage').create('users.db.json'))
+    , store = require('json-storage').create(require('dom-storage').create(
+        path.join(__dirname, '..', 'var', 'users.db.json')
+      )
     , db = {
           "coolaj86": {
               "passphrase": "secret"

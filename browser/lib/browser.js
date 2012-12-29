@@ -71,6 +71,8 @@
     if (err) {
       console.error('had error');
       console.error(err);
+      // TODO move message to a better place
+      window.alert(err.toString());
       return;
     }
 
@@ -140,9 +142,29 @@
     /*jshint validthis:true*/
     var obj
       , serializeToNativeTypes = true
+      , err
       ;
 
     obj = serializeForm('form#js-signup', serializeToNativeTypes);
+    if (!obj.nickname) {
+      console.log('no nickname, no biggie');
+    }
+    if (!obj.username) {
+      err = new Error('no username');
+      console.error(err);
+    }
+    if (!/.+@.+\..+/.test(obj.email)) {
+      err = new Error('no email');
+      console.error(err);
+    }
+    if (!obj.passphrase) {
+      err = new Error('no passphrase');
+      console.error(err);
+    }
+    if (err) {
+      authenticatedUi(err);
+      return;
+    }
 
     console.log('form#js-signup');
     console.log(this);
@@ -153,10 +175,27 @@
     });
   }
 
-  var cuToken;
+  function validateForm() {
+    $('#js-signup .js-name')
+  }
+
+  var cuToken, cuVal = "";
   function checkUsername() {
+    var v = $('#js-signup .js-username').val()
+      ;
+
+    if (!v) {
+      $('.js-signup-submit').val('Create Account');
+    }
+
+    if (cuVal === v) {
+      return;
+    }
+    cuVal = v;
+
     clearTimeout(cuToken);
     $('.js-signup-submit').attr('disabled', 'disabled');
+    $('.js-signup-submit').val('Checking...');
     // TODO show spinner
     cuToken = setTimeout(function () {
       var val = $('#js-signup .js-username').val()
@@ -166,9 +205,11 @@
       request.get('/users/' + val).when(function (err, ahr, data) {
         if (data.result) {
           console.log('RED: not available');
+          $('.js-signup-submit').val('Name Unavailable');
         } else if (data.success) {
           console.log('GREEN: available');
           $('.js-signup-submit').removeAttr('disabled');
+          $('.js-signup-submit').val('Create Account');
         } else {
           console.warn("Didn't get usernames");
         }
