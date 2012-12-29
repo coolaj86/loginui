@@ -177,6 +177,7 @@
   }
 
   function showLogin() {
+    console.log('DEBUG: showLogin');
     $('.js-close-signup-login').removeClass('css-hidden');
     $('.js-login-container').removeClass('css-login-hidden');
     $('.js-signup-container').addClass('css-login-hidden');
@@ -244,16 +245,18 @@
     // if the guest token is bad, the server will respond with a different guest token
     href = url.format(urlObj);
     request.post(href).when(authenticatedUi);
+   }
 
-    $('body').on('.js-logout', 'click', logout);
-    $('body').on('form#js-auth', 'submit', attemptLogin);
-    $('body').on('form#js-signup', 'submit', attemptCreate);
-    $('body').on('form#js-signup .js-username', 'keyup', checkUsername);
-    $('body').on('.js-show-signup', 'click', showSignup);
-    $('body').on('.js-show-login', 'click', showLogin);
-    $('body').on('.js-close-signup-login', 'click', hideLoginSignup);
-    $('body').on('.js-passphrase', 'keyup', copyPassphrase);
-    $('body').on('.js-hide-passphrase', 'change', hidePassphrase);
+  function initEvents() {
+    $('body').on('click', '.js-logout', logout);
+    $('body').on('submit', 'form#js-auth', attemptLogin);
+    $('body').on('submit', 'form#js-signup', attemptCreate);
+    $('body').on('keyup', 'form#js-signup .js-username', checkUsername);
+    $('body').on('click', '.js-show-signup', showSignup);
+    $('body').on('click', '.js-show-login', showLogin);
+    $('body').on('click', '.js-close-signup-login', hideLoginSignup);
+    $('body').on('keyup', '.js-passphrase', copyPassphrase);
+    $('body').on('change', '.js-hide-passphrase', hidePassphrase);
 
     $('.js-signup-container').addClass('css-login-hidden');
     $('.js-login-container').addClass('css-login-hidden');
@@ -264,5 +267,5 @@
   }
 
   domReady(init);
+  domReady(initEvents);
 }());
-

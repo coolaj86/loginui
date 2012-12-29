@@ -1,4 +1,5 @@
-/*jshint strict:true node:true es5:true onevar:true laxcomma:true laxbreak:true*/
+/*jshint strict:true node:true es5:true onevar:true laxcomma:true laxbreak:true
+eqeqeq:true immed:true latedef:true unused:true undef:true*/
 /*
  * SERVER
  */
@@ -27,7 +28,6 @@
             , "salt": null
           }
       }
-    , otpDb = {}
     ;
 
   store.set('coolaj86', db.coolaj86);
@@ -37,7 +37,6 @@
     var i
       , chars = ""
       , str = ""
-      , char
       , rnd
       ;
 
@@ -166,7 +165,7 @@
 
   // steve's cookieless-session does the magic
   // we just have to auth if credentials are given
-  function restfullyAuthenticateSession(req, res, next) {
+  function restfullyAuthenticateSession(req, res) {
     var account
       ;
 
@@ -185,9 +184,8 @@
     res.json(req.session);
   }
 
-  function restfullyCreateUser(req, res, next) {
+  function restfullyCreateUser(req, res) {
     var account = req.body
-      , existingAccount
       ;
 
     if (!account) {
@@ -219,7 +217,7 @@
     res.json(req.session);
   }
 
-  function checkOrGetUser(req, res, next) {
+  function checkOrGetUser(req, res) {
     // The user is NOT the authenticated user
     if (req.session.username !== req.params.id) {
       res.json(!!store.get(req.params.id));

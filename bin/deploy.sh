@@ -32,7 +32,7 @@ pushd browser
 
   echo -n "Compiling JavaScript to CommonJS..."
   pakmanager build
-  rm pakmanaged.html
+  rm -f pakmanaged.html
   uglifyjs pakmanaged.js > pakmanaged.min.js
   mv pakmanaged.* "${WEBPUB}"
 popd
