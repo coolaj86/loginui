@@ -217,21 +217,31 @@
     }, 750);
   }
 
+  function showAccount() {
+    $('.js-close-signup-login').removeClass('css-hidden');
+    $('.js-account-container').removeClass('css-login-hidden');
+    $('.js-login-container').addClass('css-login-hidden');
+    $('.js-signup-container').addClass('css-login-hidden');
+  }
+
   function showLogin() {
     console.log('DEBUG: showLogin');
     $('.js-close-signup-login').removeClass('css-hidden');
     $('.js-login-container').removeClass('css-login-hidden');
     $('.js-signup-container').addClass('css-login-hidden');
+    $('.js-account-container').addClass('css-login-hidden');
   }
 
   function showSignup() {
     $('.js-close-signup-login').removeClass('css-hidden');
     $('.js-signup-container').removeClass('css-login-hidden');
     $('.js-login-container').addClass('css-login-hidden');
+    $('.js-account-container').addClass('css-login-hidden');
   }
 
   function hideLoginSignup() {
     $('.js-close-signup-login').addClass('css-hidden');
+    $('.js-account-container').addClass('css-login-hidden');
     $('.js-signup-container').addClass('css-login-hidden');
     $('.js-login-container').addClass('css-login-hidden');
   }
@@ -290,6 +300,7 @@
 
   function initEvents() {
     $('body').on('click', '.js-logout', logout);
+    $('body').on('click', '.js-show-account', showAccount);
     $('body').on('submit', 'form#js-auth', attemptLogin);
     $('body').on('submit', 'form#js-signup', attemptCreate);
     $('body').on('keyup', 'form#js-signup .js-username', checkUsername);
@@ -299,6 +310,7 @@
     $('body').on('keyup', '.js-passphrase', copyPassphrase);
     $('body').on('change', '.js-hide-passphrase', hidePassphrase);
 
+    $('.js-account-container').addClass('css-login-hidden');
     $('.js-signup-container').addClass('css-login-hidden');
     $('.js-login-container').addClass('css-login-hidden');
     $('.js-login-container').addClass('css-login-hidden');
