@@ -40,6 +40,8 @@
   };
 
   function updateAccount(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
     window.alert('Not Implemented');
     hideAccountDetails();
   }
