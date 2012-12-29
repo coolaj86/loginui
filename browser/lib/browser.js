@@ -39,6 +39,11 @@
     return p;
   };
 
+  function updateAccount(ev) {
+    window.alert('Not Implemented');
+    hideAccountDetails();
+  }
+
   function attemptLogin(ev) {
     var obj
       , urlObj
@@ -175,10 +180,6 @@
     });
   }
 
-  function validateForm() {
-    $('#js-signup .js-name')
-  }
-
   var cuToken, cuVal = "";
   function checkUsername() {
     var v = $('#js-signup .js-username').val()
@@ -246,7 +247,12 @@
     $('.js-login-container').addClass('css-login-hidden');
   }
 
-  function copyPassphrase() {
+  function hideAccountDetails() {
+    $('.js-close-signup-login').addClass('css-hidden');
+    $('.js-account-container').addClass('css-login-hidden');
+  }
+
+ function copyPassphrase() {
     /*jshint validthis:true*/
     var secret = $(this).val()
       ;
@@ -301,6 +307,7 @@
   function initEvents() {
     $('body').on('click', '.js-logout', logout);
     $('body').on('click', '.js-show-account', showAccount);
+    $('body').on('submit', 'form#js-account', updateAccount);
     $('body').on('submit', 'form#js-auth', attemptLogin);
     $('body').on('submit', 'form#js-signup', attemptCreate);
     $('body').on('keyup', 'form#js-signup .js-username', checkUsername);
