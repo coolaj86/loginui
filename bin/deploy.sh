@@ -12,6 +12,7 @@ popd
 
 pushd browser
   WEBPUB='../public'
+  WEBSTATIC='../static'
 
   echo -n "Killing off old cruft..."
   rm -rf "${WEBPUB}"
@@ -19,6 +20,7 @@ pushd browser
   echo -n "Copying in static files..."
   mkdir -p "${WEBPUB}/"
   rsync -a static/ "${WEBPUB}/"
+  rsync -a "${WEBSTATIC}/" "${WEBPUB}/"
   # make sure there's always a favicon, even if it's broken
   touch "${WEBPUB}/favicon.ico"
 

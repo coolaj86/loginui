@@ -14,3 +14,9 @@ API
 
   * `POST /sessions HEADER Authorization: Basic ...`
     * returns authenticated session (or a guest on failure)
+
+Facebook
+===
+
+https://developers.facebook.com/docs/howtos/login/getting-started/
+https://developers.facebook.com/apps/{{appId}}/summary
