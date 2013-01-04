@@ -7,9 +7,6 @@
     , domReady = $
     ;
 
-  function initiateFbLogin() {
-  }
-
   function testApi() {
     console.log('Welcome! Fetching your information.... ');
     FB.api('/me', function(response) {
@@ -55,7 +52,7 @@
       ev.stopPropagation();
 
       console.log('click', '.js-fb-connect');
-      initiateFbLogin();
+      login();
     });
   });
 
@@ -71,6 +68,6 @@
       //, xfbml: true  // parse XFBML
     });
 
-    login();
+    getLoginStatus();
   };
 }());
