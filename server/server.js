@@ -14,7 +14,7 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
     , app = connect.createServer()
     , store = require('json-storage').create(require('dom-storage').create(
         path.join(__dirname, '..', 'var', 'users.db.json')
-      )
+      ))
     , db = {
           "coolaj86": {
               "passphrase": "secret"
