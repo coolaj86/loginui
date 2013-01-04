@@ -1,59 +1,12 @@
 // must be named fb-root as per facebook
 #fb-root
 script
-  function testApi() {
-    console.log('Welcome! Fetching your information.... ');
-    FB.api('/me', function(response) {
-      console.log('/me Result:');
-      console.log(response);
-      console.log('Good to see you, ' + response.name + '.');
-    });
-  }
-
-  function login() {
-    FB.login(function(response) {
-      console.log('Login Result:');
-      console.log(response);
-      if (response.authResponse) {
-        // connected
-        getLoginStatus();
-      } else {
-        // cancelled
-        // XXX BUG cyclic loop
-        getLoginStatus();
-      }
-    });
-  }
-
-  function getLoginStatus() {
-    // Additional init code here
-    FB.getLoginStatus(function(response) {
-      console.log('Login Status:');
-      console.log(response);
-      if (response.status === 'connected') {
-        // connected
-        testApi();
-      } else if (response.status === 'not_authorized') {
-        // not_authorized
-        login();
-      } else {
-        // not_logged_in
-        login();
-      }
-    });
-  }
-
   // Additional JS functions here
   window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '191236997623684', // App ID
-      //channelUrl : '//WWW.YOUR_DOMAIN.COM/channel.html', // Channel File
-      status     : true, // check login status
-      cookie     : true, // enable cookies to allow the server to access the session
-      //xfbml      : true  // parse XFBML
-    });
+    var fb = require('loginui/fb')
+      ;
 
-    getLoginStatus();
+    fb.init();
   };
 
   // Load the SDK Asynchronously

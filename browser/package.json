@@ -1,13 +1,14 @@
 {
-  "author": "DUMMY AUTHOR <DUMMY@example.com> (http://DUMMY.me)",
-  "name": "DUMMYAPP-webclient",
-  "description": "The browser webclient for DUMMYAPP",
+  "author": "AJ ONeal <coolaj86@gmail.com> (http://coolaj86.com)",
+  "name": "loginui",
+  "description": "A demo app that's all about user and account management",
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/DUMMYORG/DUMMYAPP.git"
+    "url": "git://github.com/coolaj86/loginui.git"
   },
   "main": "lib/browser",
+  "lib": "lib",
   "scripts": {
     "test": "run-tests"
   },
