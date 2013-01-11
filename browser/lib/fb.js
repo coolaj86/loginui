@@ -85,7 +85,7 @@
   }
 
   myFb.getAccessToken = function (cb) {
-    function getStatus() {
+    myFb.queue(function () {
       FB.getLoginStatus(function(response) {
         if (response.status === 'connected') {
           // connected
@@ -95,11 +95,15 @@
           cb();
         }
       });
-    }
+    });
+  };
+
+  myFb.queue = function (fn) {
     if (myFb._initialized) {
-      getStatus();
+      // TODO process.nextTick
+      setTimeout(fn, 0);
     } else {
-      myFb._todo.push(getStatus);
+      myFb._todo.push(fn);
     }
   };
 
