@@ -3,6 +3,7 @@
   "use strict";
   
   var $ = require('jQuery')
+    , myFb = module.exports
     , FB
     , domReady = $
     ;
@@ -16,19 +17,46 @@
     });
   }
 
-  function login() {
-    FB.login(function(response) {
-      console.log('Login Result:');
-      console.log(response);
-      if (response.authResponse) {
+  function login(cb) {
+    function answerHappily() {
+      cb(FB.getAccessToken());
+    }
+
+    FB.getLoginStatus(function(response) {
+      console.log('Login Status:', response.status);
+      if (response.status === 'connected') {
         // connected
-        getLoginStatus();
-      } else {
-        // cancelled
-        // XXX BUG cyclic loop
-        getLoginStatus();
+        // logged into facebook and connected to the app
+        answerHappily();
+        return;
       }
-    }, { scope: "email" });
+
+      function relayFbLogin() {
+        FB.login(function(response) {
+          console.log('Login Result:');
+          console.log(response);
+          if (response.authResponse) {
+            // connected
+            answerHappily();
+          } else {
+            // cancelled
+          }
+        }, { scope: "email" });
+      }
+
+      FB.login(relayFbLogin);
+      if (response.status === 'not_authorized') {
+        // not_authorized
+        // logged in to facebook, but not the app
+      } else if (response.status === 'unknown') {
+        // not logged in to facebook at all
+      } else {
+        // not_logged_in ?
+        console.warn('unknown state:', response.status);
+      }
+      // TODO what about when the app is connected,
+      // but the access token has expired?
+    });
   }
 
   function getLoginStatus() {
@@ -37,26 +65,35 @@
       console.log('Login Status:', response.status);
       if (response.status === 'connected') {
         // connected
+        // logged into facebook and connected to the app
         testApi();
       } else if (response.status === 'not_authorized') {
         // not_authorized
+        // logged in to facebook, but not the app
+      } else if (response.status === 'unknown') {
+        // not logged in to facebook at all
       } else {
-        // not_logged_in
+        // not_logged_in ?
+        console.warn('unknown state:', response.status);
       }
+      // TODO what about when the app is connected,
+      // but the access token has expired?
     });
   }
 
-  domReady(function () {
-    $('body').on('click', '.js-fb-connect', function (ev) {
-      ev.preventDefault();
-      ev.stopPropagation();
-
-      console.log('click', '.js-fb-connect');
-      login();
+  myFb.getAccessToken = function (cb) {
+    FB.getLoginStatus(function(response) {
+      if (response.status === 'connected') {
+        // connected
+        // logged into facebook and connected to the app
+        cb(FB.getAccessToken());
+      } else {
+        cb();
+      }
     });
-  });
+  };
 
-  module.exports.init = function () {
+  myFb.init = function () {
     // loaded async
     FB = require('FB');
 
@@ -67,7 +104,6 @@
       , cookie: true // enable cookies to allow the server to access the session
       //, xfbml: true  // parse XFBML
     });
-
-    getLoginStatus();
   };
+  myFb.login = login;
 }());

@@ -7,7 +7,10 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
   "use strict";
 
   // TODO on create pass in database with get, set, query, etc
-  var steve = require('./steve')
+  var PREAUTH = {}
+    , MIN_PASSPHRASE_LEN = 5
+    , request = require('ahr')
+    , steve = require('./steve')
     , path = require('path')
     , connect = require('connect')
     , crypto = require('crypto')
@@ -67,12 +70,167 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
     return crypto.createHash('sha1').update(salt + secret).digest('hex');
   }
 
-  function restfullyAuthenticateUser(req) {
+/*
+  function fbGetServerToken(code) {
+    url = "https://graph.facebook.com/oauth/access_token?"
+      + "client_id=" + YOUR_APP_ID
+      + "&redirect_uri=" + YOUR_REDIRECT_URI
+      + "&client_secret=" + YOUR_APP_SECRET
+      + "&code=" + CODE_GENERATED_BY_FACEBOOK
+      ;
+  }
+*/
+
+  function fbCreateUser(fn, fbData) {
+    //
+    function mergeOrCreate(err, account) {
+      var fbid
+        , newAccount = {
+              email: fbData.email
+            , nickname: fbData.first_name + ' ' + fbData.last_name
+            , gender: fbData.gender
+            , birthday: (fbData.birthday||'').split('/').reverse().join('-')
+            , auths: [{
+                  type: 'fb'
+                , id: fbData.id
+                , username: fbData.username
+                , email: fbData.email
+              }]
+          }
+        ;
+
+      if (err) {
+        account = null;
+      }
+
+      // create a user as long as one doesn't exist by the same name
+      [fbData.username, fbData.email.replace(/@.*/, '')].some(function (uid) {
+        if(uid && !checkUser(uid)) {
+          fbid = uid;
+          return true;
+        }
+      });
+
+      if (!account) {
+        // TODO allow multiple e-mails
+        account = createUser(fbid, null, newAccount);
+      } else {
+        mergeAccounts(account, newAccount);
+      }
+
+      console.log('saving account', 'fb:' + fbData.id, account);
+      store.set('fb:' + fbData.id, { alias: account.username });
+      fn(null, account);
+    }
+
+    // This is kinda sketch.
+    // We're trusting that if a user verified their e-mail
+    // via facebook that it's good enough for us as well
+    retrieveUser(mergeOrCreate, fbData.email, PREAUTH);
+  }
+
+  function fbAuth(fn, YOUR_USER_ACCESS_TOKEN) {
+    // text/javascript
+    request.get("https://graph.facebook.com/me?access_token=" + YOUR_USER_ACCESS_TOKEN).when(function (err, ahr2, fbData) {
+      /*{ id: , first_name: , last_name:, email: , username: , gender: , birthday: }*/
+      if ('string' === typeof fbData) {
+        fbData = JSON.parse(fbData);
+      }
+      if (!err) {
+        if (!fbData || !fbData.email) {
+          console.error(fbData);
+          err = new Error('Unsuccessful fb authentication attempt');
+        }
+      } 
+
+      if (err) {
+        fn(err);
+        return;
+      }
+
+      retrieveUser(function (err, account) {
+        if (!err) {
+          fn(err, account);
+          return;
+        }
+        
+        fbCreateUser(fn, fbData);
+      }, 'fb:' + fbData.id, PREAUTH);
+    });
+  }
+
+  function altAuth(fn, req) {
+    if ('fb' === req.body.auth.type) {
+      fbAuth(fn, req.body.auth.accessToken);
+    } else {
+      fn(new Error('unrecognized authorization type ' + req.body.auth.type));
+    }
+  }
+
+  function retrieveUser(fn, username, pass) {
+    var account
+      , err
+      ;
+
+    account = store.get(username);
+    if (!account) {
+      err = new Error('No user ' + username);
+      console.warn('163', err.toString());
+      fn(err);
+      return;
+    }
+    if (account.alias) {
+      retrieveUser(fn, account.alias, pass);
+      return;
+    }
+
+    // auto-update unsalted passwords
+    if (!account.salt) {
+      account.salt = randomString(255);
+      account.passphrase = hashSecret(account.passphrase, account.salt);
+    }
+
+    console.log(pass.length, pass.toString().substr(0, 3));
+    console.log('client     :', pass);
+    console.log('client+salt:', hashSecret(pass, account.salt));
+    console.log('original   :', account.otp);
+    console.log('original   :', account.passphrase);
+    if ((258 === pass.length) && ('otp' === pass.substr(0, 3))) {
+      console.log('looks like otp');
+      if (pass.substr(3) === account.otp) {
+        account.otp = randomString(255);
+      } else {
+        err = new Error('otp doesn\'t match');
+        console.log(err.toString());
+        fn(err);
+        return;
+      }
+    } else if ((PREAUTH !== pass) && (hashSecret(pass, account.salt) !== account.passphrase)) {
+      err = new Error('login+pass doesn\'t match');
+      console.log(err.toString());
+      fn(err);
+      return;
+    }
+
+    console.log('looks like success');
+    account.otp = account.otp || randomString(255);
+    store.set(username, account);
+    fn(null, account);
+  }
+
+  function httpAuth(_fn, req) {
     var token
       , username
       , pass
-      , account
       , basicAuthB64
+      , fn = function () {
+          var args = [].slice(arguments)
+            ;
+
+          process.nextTick(function () {
+            _fn.apply(null, args);
+          });
+        }
       ;
 
     basicAuthB64 = (req.headers.authorization||"").replace(/\s*Basic\s+/i, '');
@@ -84,43 +242,10 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
     username = token.shift(); // TODO disallow ':' in username
     pass = token.join(':'); // a password might have a ':'
 
-    account = store.get(username);
-    if (!account) {
-      console.warn('No user', username);
-      return;
-    }
-
-    // auto-update unsalted passwords
-    if (!account.salt) {
-      account.salt = randomString(255);
-      account.passphrase = hashSecret(account.passphrase, account.salt);
-    }
-
-    console.log(pass.length, pass.substr(0, 3));
-    console.log('client     :', pass);
-    console.log('client+salt:', hashSecret(pass, account.salt));
-    console.log('original   :', account.otp);
-    console.log('original   :', account.passphrase);
-    if ((258 === pass.length) && ('otp' === pass.substr(0, 3))) {
-      console.log('looks like otp');
-      if (pass.substr(3) === account.otp) {
-        account.otp = randomString(255);
-      } else {
-        console.log('otp doesn\'t match');
-        return;
-      }
-    } else if (hashSecret(pass, account.salt) !== account.passphrase) {
-      console.log('login+pass doesn\'t match');
-      return;
-    }
-
-    console.log('looks like success');
-    account.otp = account.otp || randomString(255);
-    store.set(username, account);
-    return account;
+    retrieveUser(fn, username, pass);
   }
 
-  function createUser(session, username, passphrase, extra) {
+  function createUser(username, passphrase, extra) {
     var user = true
       , account
       , salt = randomString(255)
@@ -132,6 +257,10 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
     while (user) {
       username = username || ('guest' + Math.floor(Math.random() * 1000000000000));
       user = store.get(username);
+    }
+
+    if (passphrase && passphrase.length < MIN_PASSPHRASE_LEN) {
+      passphrase = null;
     }
 
     account = {
@@ -154,6 +283,7 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
     account.otp = account.otp || randomString(255);
 
     store.set(account.username, account);
+    store.set(account.email, { alias: account.username });
     return account;
   }
 
@@ -169,22 +299,34 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
   // steve's cookieless-session does the magic
   // we just have to auth if credentials are given
   function restfullyAuthenticateSession(req, res) {
+    console.log('posted to /session');
     var account
       ;
 
-    if (req.headers.authorization) {
-      account = restfullyAuthenticateUser(req);
-      if (!account) {
+    function finishHim(err, account) {
+      if (err) {
         res.error('authentication did not complete (creating a guest)');
-        // TODO url mangle as to fall through to a create user route?
-        account = createUser(req.session);
       }
-    } else {
-      account = createUser(req.session);
+      if (!account) {
+        // TODO url mangle as to fall through to a create user route?
+        account = createUser();
+      }
+
+      addAccountInfoToSession(req.session, account);
+      res.json(req.session);
     }
 
-    addAccountInfoToSession(req.session, account);
-    res.json(req.session);
+    if (req.headers.authorization) {
+      account = httpAuth(finishHim, req);
+    } else if (req.body.auth) {
+      account = altAuth(finishHim, req);
+    } else {
+      // Guest
+      finishHim();
+    }
+  }
+
+  function mergeAccounts(primary, old) {
   }
 
   function restfullyCreateUser(req, res) {
@@ -214,21 +356,25 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
       res.error('no passphrase');
     } 
 
-    account = createUser(req.session, account.username, account.passphrase, account);
+    account = createUser(account.username, account.passphrase, account);
     addAccountInfoToSession(req.session, account);
 
     res.json(req.session);
   }
 
+  function checkUser(username) {
+    return store.get(username);
+  }
+
   function checkOrGetUser(req, res) {
     // The user is NOT the authenticated user
     if (req.session.username !== req.params.id) {
-      res.json(!!store.get(req.params.id));
+      res.json(!!checkUser(req.params.id));
       return;
     }
 
     // The user IS the authenticated user
-    res.json(store.get(req.params.id));
+    res.json(checkUser(req.params.id));
   }
 
   function router(rest) {

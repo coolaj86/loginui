@@ -1,4 +1,5 @@
-/*jshint strict:true node:true es5:true onevar:true laxcomma:true laxbreak:true*/
+/*jshint strict:true jquery:true browser:true node:true es5:true
+onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
 /*
  * BROWSER
  */
@@ -6,21 +7,24 @@
   "use strict";
 
   var $ = require('ender')
+    /*
     , noObj = {}
     , noOp = function () {}
-    , domReady = require('domready')
     , uuid = require('node-uuid')
+    , pure = require('pure').$p
+    , oldHttp
+    */
+    , domReady = require('domready')
     , url = require('url')
     , store = require('json-storage').create(require('localStorage'))
     , location = require('location')
     , serializeForm = require('serialize-form').serializeFormObject
     , serializeToNativeTypes = true
-    , pure = require('pure').$p
     , request = require('ahr2')
-    , oldHttp
     , userSession
     , cuToken
     , cuVal = ""
+    , fb = require('./fb')
     ;
 
   require('window').fbOauth = function (msg) {
@@ -28,9 +32,7 @@
     console.log(msg);
   };
 
-  // just so it gets included
-  require('./fb');
-
+  // TODO switch to AHR3
   // Monkey Patch for session support
   request._oldHttp = request.http;
   request.http = function (options, callback) {
@@ -56,6 +58,40 @@
     hideAccountDetails();
   }
 
+  // try to login as User or Guest
+  // if the Token is bad, the server will respond with a different guest token
+  function initialLogin() {
+    var login = store.get('login')
+      , urlObj = {
+            protocol: location.protocol
+          , hostname: location.hostname
+          , port: location.port
+          , pathname: '/session'
+        }
+      , href
+      ;
+
+    console.log('initialLogin');
+
+    if (login && login.username && login.secret) {
+      // TODO create an ahr3 client for this
+      urlObj.auth = login.username + ':' + login.secret;
+      href = url.format(urlObj);
+      request.post(href, null, login).when(authenticatedUi);
+      return;
+    }
+
+    // returns access token or undefined
+    fb.getAccessToken(function (accessToken) {
+      if (accessToken) {
+        urlObj.auth = { type: 'fb', accessToken: accessToken };
+      }
+
+      href = url.format(urlObj);
+      request.post(href, null, login).when(authenticatedUi);
+    });
+  }
+
   function attemptLogin(ev) {
     var obj
       , urlObj
@@ -77,6 +113,7 @@
 
     href = url.format(urlObj);
 
+    console.log('attemptLogin');
     request.post(href).when(authenticatedUi);
   }
 
@@ -292,32 +329,36 @@
       $('.js-nopassword').removeClass('css-hidden');
     }
   }
+  
+  function fbLogin(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
 
-  function init() {
-    var login = store.get('login')
-      , urlObj = {
-            protocol: location.protocol
-          , hostname: location.hostname
-          , port: location.port
-          , pathname: '/session'
-        }
-      , href
-      ;
+    console.log('click', '.js-fb-connect');
+    // TODO this theoretically might not be ready
+    fb.login(function (accessToken) {
+      var urlObj = {
+              protocol: location.protocol
+            , hostname: location.hostname
+            , port: location.port
+            , pathname: '/session'
+          }
+        , href = url.format(urlObj)
+        , body = { auth: { type: "fb", accessToken: accessToken } }
+        ;
 
-    if (login && login.username && login.secret) {
-      // TODO this should be handled as part of ahr2
-      urlObj.auth = login.username + ':' + login.secret;
-    }
-
-    // try to login as guest or user
-    // if the guest token is bad, the server will respond with a different guest token
-    href = url.format(urlObj);
-    request.post(href).when(authenticatedUi);
-   }
+      if (accessToken) {
+        request.post(href, null, body);
+      } else {
+        authenticatedUi(null, null, { success: false, errors: [ new Error('bad facebook auth') ] });
+      }
+    });
+  }
 
   function initEvents() {
     $('body').on('click', '.js-logout', logout);
     $('body').on('click', '.js-show-account', showAccount);
+    $('body').on('click', '.js-fb-connect', fbLogin);
     $('body').on('submit', 'form#js-account', updateAccount);
     $('body').on('submit', 'form#js-auth', attemptLogin);
     $('body').on('submit', 'form#js-signup', attemptCreate);
@@ -335,8 +376,19 @@
     $('.js-close-signup-login').addClass('css-hidden');
     $('.js-password').addClass('css-hidden');
     $('.js-signup-submit').attr('disabled', 'disabled');
+
+    // Cases to handle:
+    // * This browser has no OTP (or it is invalid)
+    //   1. Try facebook
+    //   2. Assume Guest
+    //   3. Get the user to connect the guest via account creation (incl facebook)
+    // * This browser has a (valid) Guest OTP
+    //   1. Assume Guest
+    //   ??. Try facebook, ask to merge
+    // * This browser has a (valid) User OTP
+    //   1. The app logs in. Done
+    initialLogin();
   }
 
-  domReady(init);
   domReady(initEvents);
 }());
