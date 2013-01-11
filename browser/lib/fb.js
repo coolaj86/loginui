@@ -8,6 +8,9 @@
     , domReady = $
     ;
 
+  myFb._todo = [];
+  myFb._initialized = false;
+
   function testApi() {
     console.log('Welcome! Fetching your information.... ');
     FB.api('/me', function(response) {
@@ -82,15 +85,22 @@
   }
 
   myFb.getAccessToken = function (cb) {
-    FB.getLoginStatus(function(response) {
-      if (response.status === 'connected') {
-        // connected
-        // logged into facebook and connected to the app
-        cb(FB.getAccessToken());
-      } else {
-        cb();
-      }
-    });
+    function getStatus() {
+      FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+          // connected
+          // logged into facebook and connected to the app
+          cb(FB.getAccessToken());
+        } else {
+          cb();
+        }
+      });
+    }
+    if (myFb._initialized) {
+      getStatus();
+    } else {
+      myFb._todo.push(getStatus);
+    }
   };
 
   myFb.init = function () {
@@ -104,6 +114,12 @@
       , cookie: true // enable cookies to allow the server to access the session
       //, xfbml: true  // parse XFBML
     });
+
+    myFb._initialized = true;
+    myFb._todo.forEach(function (fn) {
+      fn();
+    });
+    myFb.length = 0;
   };
   myFb.login = login;
 }());
