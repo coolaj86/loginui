@@ -174,8 +174,9 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
 
     account = store.get(username);
     if (!account) {
+      console.log(typeof username, username);
       err = new Error('No user ' + username);
-      console.warn('163', err.toString());
+      console.warn('163', err.message);
       fn(err);
       return;
     }

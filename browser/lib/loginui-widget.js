@@ -61,7 +61,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
   // try to login as User or Guest
   // if the Token is bad, the server will respond with a different guest token
   function initialLogin() {
-    var login = store.get('login')
+    var login = store.get('login') || {}
       , urlObj = {
             protocol: location.protocol
           , hostname: location.hostname
@@ -73,7 +73,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
 
     console.log('initialLogin');
 
-    if (login && login.username && login.secret) {
+    if (login.username && login.secret) {
       // TODO create an ahr3 client for this
       urlObj.auth = login.username + ':' + login.secret;
       href = url.format(urlObj);
@@ -84,10 +84,11 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
     // returns access token or undefined
     fb.getAccessToken(function (accessToken) {
       if (accessToken) {
-        urlObj.auth = { type: 'fb', accessToken: accessToken };
+        login.auth = { type: "fb", accessToken: accessToken };
       }
 
       href = url.format(urlObj);
+      console.log('fb.getAccessToken', href, login);
       request.post(href, null, login).when(authenticatedUi);
     });
   }
