@@ -1,18 +1,4 @@
 .js-authenticated.css-authenticated
-  .css-main
-    span.js-guest
-      span Welcome 
-      span.js-nickname Guest00000000
-      span !
-      span   
-    a.js-authenticated-user.js-logout(href="#logout")
-      span.js-nickname-pad Not 
-      span.js-nickname John Doe
-      span.js-nickname-pad ?
-    span &nbsp;
-    a.js-authenticated-user.js-show-account(href="#account")
-      span Account
-    span &nbsp;
   .js-signup-container.css-signup-container
     form#js-signup
       .css-row
@@ -34,7 +20,21 @@
         Login with Facebook
       button.css-gp-connect.js-gp-connect(type='button').
         Login with Google+
-        
+    
+    .css-main
+      span.js-guest
+        span Welcome 
+        span.js-nickname Guest00000000
+        span !
+        span   
+      a.js-authenticated-user.js-logout(href="#logout")
+        span.js-nickname-pad Not 
+        span.js-nickname John Doe
+        span.js-nickname-pad ?
+      span &nbsp;
+      a.js-authenticated-user.js-show-account(href="#account")
+        span Account
+      span &nbsp;    
     a.js-show-login.js-guest(href="#") Login
     span &nbsp;
     a.js-show-signup.js-guest(href="#") Create Account
