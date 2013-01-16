@@ -13,7 +13,28 @@
     a.js-authenticated-user.js-show-account(href="#account")
       span Account
     span &nbsp;
-
+  .js-signup-container.css-signup-container
+    form#js-signup
+      .css-row
+        .css-left
+          span.css-label Name
+          input.js-nickname(type='text', name="nickname", placeholder="i.e. John Doe")
+          span.css-label Username
+          input.js-username(name="username", placeholder="i.e. john.doe")
+          input.js-signup-submit(type="submit", data-action="signup", value='Create Account')
+        .css-right
+          span.css-label Email
+          input.js-email(type='email', name="email", placeholder="i.e. john.doe@example.com")
+          span.css-label Passphrase
+          input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
+          input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
+          span Hide Passphrase 
+          input.js-hide-passphrase(type="checkbox")
+      button.css-fb-connect.js-fb-connect(type='button').
+        Login with Facebook
+      button.css-gp-connect.js-gp-connect(type='button').
+        Login with Google+
+        
     a.js-show-login.js-guest(href="#") Login
     span &nbsp;
     a.js-show-signup.js-guest(href="#") Create Account
@@ -65,26 +86,6 @@
         button.css-gp-connect.js-gp-connect(type='button').
           Login with Google+
 
-    .js-signup-container.css-signup-container
-      form#js-signup
-        .css-row
-          .css-left
-            span.css-label Name
-            input.js-nickname(type='text', name="nickname", placeholder="i.e. John Doe")
-            span.css-label Username
-            input.js-username(name="username", placeholder="i.e. john.doe")
-            input.js-signup-submit(type="submit", data-action="signup", value='Create Account')
-          .css-right
-            span.css-label Email
-            input.js-email(type='email', name="email", placeholder="i.e. john.doe@example.com")
-            span.css-label Passphrase
-            input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
-            input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
-            span Hide Passphrase 
-            input.js-hide-passphrase(type="checkbox")
-        button.css-fb-connect.js-fb-connect(type='button').
-          Login with Facebook
-        button.css-gp-connect.js-gp-connect(type='button').
-          Login with Google+
+
 
 include fb
