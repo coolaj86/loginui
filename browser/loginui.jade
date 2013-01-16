@@ -2,24 +2,25 @@
   .js-signup-container.css-signup-container
     form#js-signup
       h1 Save Your Booklist
-      .css-row
-          div.css-label Name
-          input.js-nickname(type='text', name="nickname", placeholder="i.e. John Doe")
-          div.css-label Username
-          input.js-username(name="username", placeholder="i.e. john.doe")
-          input.js-signup-submit(type="submit", data-action="signup", value='Create Account')
-          div.css-label Email
-          input.js-email(type='email', name="email", placeholder="i.e. john.doe@example.com")
-          div.css-label Passphrase
-          input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
-          input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
-          div Hide Passphrase 
-          input.js-hide-passphrase(type="checkbox")
+      div.css-label Enter your school URL
+      input (name="school" placeholder="myschool.edu")
       button.css-fb-connect.js-fb-connect(type='button').
         Login with Facebook
       button.css-gp-connect.js-gp-connect(type='button').
         Login with Google+
-    
+      div.css-label Name
+      input.js-nickname(type='text', name="nickname", placeholder="i.e. John Doe")
+      div.css-label Username
+      input.js-username(name="username", placeholder="i.e. john.doe")
+      input.js-signup-submit(type="submit", data-action="signup", value='Create Account')
+      div.css-label Email
+      input.js-email(type='email', name="email", placeholder="i.e. john.doe@example.com")
+      div.css-label Passphrase
+      input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
+      input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
+      div Hide Passphrase
+      input.js-hide-passphrase(type="checkbox")
+      
     .css-main
       span.js-guest
         span Welcome 
