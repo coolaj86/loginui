@@ -65,17 +65,13 @@
     .js-login-container.css-login-container
       form#js-login#js-auth
         .css-row
-          .css-left
             span.css-label Username (or Email)
             input.js-username(name="username", placeholder="i.e. john.doe or john.doe@example.com")
-          .css-right
             span.css-label Passphrase
             input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
             input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
         .css-row
-          .css-left
             input(type="submit", data-action="login", value='Login')
-          .css-right
             span Hide Passphrase
             input.js-hide-passphrase(type="checkbox")
         a(href="#iforgot") Forgot Passphrase?
