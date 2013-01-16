@@ -10,19 +10,18 @@
         Login with Facebook
       button.css-gp-connect.js-gp-connect(type='button').
         Login with Google+
-      div.css-label Name
-      input.js-nickname(type='text', name="nickname", placeholder="i.e. John Doe")
-      div.css-label Username
-      input.js-username(name="username", placeholder="i.e. john.doe")
+      //div.css-label Name
+      //input.js-nickname(type='text', name="nickname", placeholder="i.e. John Doe")
+      //div.css-label Username
+      //input.js-username(name="username", placeholder="i.e. john.doe")
       div.css-label Email
       input.js-email(type='email', name="email", placeholder="i.e. john.doe@example.com")
       div.css-label Passphrase
       input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
       input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
-      div Hide Passphrase
       input.js-hide-passphrase(type="checkbox")
-      input.js-signup-submit(type="submit", data-action="signup", value='Create Account')
-    .css-main
+      input.css-submit.js-signup-submit(type="submit", data-action="signup", value='Create Account')
+    //.css-main
       span.js-guest
         span Welcome 
         span.js-nickname Guest00000000
@@ -36,52 +35,52 @@
       a.js-authenticated-user.js-show-account(href="#account")
         span Account
       span &nbsp;    
-    a.js-show-login.js-guest(href="#") Login
-    span &nbsp;
-    a.js-show-signup.js-guest(href="#") Create Account
-    span &nbsp;
-    button.js-close-signup-login X
-  .js-account-container.css-account-container
-    form#js-account
+    //a.js-show-login.js-guest(href="#") Login
+    //span &nbsp;
+    //a.js-show-signup.js-guest(href="#") Create Account
+    //span &nbsp;
+    //button.js-close-signup-login X
+.js-account-container.css-account-container
+  form#js-account
+    .css-row
+      .css-clear
+        span.css-label Username
+      .css-clear
+        input.js-username(name="username", placeholder="i.e. john.doe")
+      .css-clear
+        span.css-label Email
+      .css-clear
+        input.js-email(type='email', name="email", placeholder="i.e. john.doe@example.com")
+      .css-clear
+        span.css-label Passphrase
+      .css-clear
+        input.js-passphrase.js-password(name="passphrase", type="password", placeholder="i.e. saucy secret (shown)")
+      .css-clear
+        input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="i.e. saucy secret (hidden)")
+      .css-clear
+        span Hide Passphrase
+        input.js-hide-passphrase(type="checkbox")
+      .css-clear
+        input(type="submit", data-action="update", value='Update')
+
+.js-unauthenticated.css-unauthenticated
+  .js-login-container.css-login-container
+    form#js-login#js-auth
       .css-row
-        .css-clear
-          span.css-label Username
-        .css-clear
-          input.js-username(name="username", placeholder="i.e. john.doe")
-        .css-clear
-          span.css-label Email
-        .css-clear
-          input.js-email(type='email', name="email", placeholder="i.e. john.doe@example.com")
-        .css-clear
+          span.css-label Username (or Email)
+          input.js-username(name="username", placeholder="i.e. john.doe or john.doe@example.com")
           span.css-label Passphrase
-        .css-clear
-          input.js-passphrase.js-password(name="passphrase", type="password", placeholder="i.e. saucy secret (shown)")
-        .css-clear
-          input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="i.e. saucy secret (hidden)")
-        .css-clear
+          input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
+          input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
+      .css-row
+          input(type="submit", data-action="login", value='Login')
           span Hide Passphrase
           input.js-hide-passphrase(type="checkbox")
-        .css-clear
-          input(type="submit", data-action="update", value='Update')
-
-  .js-unauthenticated.css-unauthenticated
-    .js-login-container.css-login-container
-      form#js-login#js-auth
-        .css-row
-            span.css-label Username (or Email)
-            input.js-username(name="username", placeholder="i.e. john.doe or john.doe@example.com")
-            span.css-label Passphrase
-            input.js-passphrase.js-password(name="passphrase", type="password", placeholder="type your passphrase (shown)")
-            input.js-passphrase.js-nopassword(name="passphrase-hidden", type="text", placeholder="type your passphrase (hidden)")
-        .css-row
-            input(type="submit", data-action="login", value='Login')
-            span Hide Passphrase
-            input.js-hide-passphrase(type="checkbox")
-        a(href="#iforgot") Forgot Passphrase?
-        button.css-fb-connect.js-fb-connect(type='button').
-          Login with Facebook
-        button.css-gp-connect.js-gp-connect(type='button').
-          Login with Google+
+      a(href="#iforgot") Forgot Passphrase?
+      button.css-fb-connect.js-fb-connect(type='button').
+        Login with Facebook
+      button.css-gp-connect.js-gp-connect(type='button').
+        Login with Google+
 
 
 

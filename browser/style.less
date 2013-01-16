@@ -4,12 +4,14 @@ body{
   font-family: "Play";
   background-color: #23241f;
   background-image: url('../images/dark_mosaic.png');
+  color:#999;
 }
 .css-authenticated {
   //position: absolute;
   top: 0px;
   right: 10px;
   width:20%;
+  padding:0em 1em 1em 1em;
 }
 .css-login-hidden {
   top: -250px!important;
@@ -24,14 +26,14 @@ body{
 .css-main {
   -webkit-transition-property: width;
   -webkit-transition-duration: 1s;
-  background: gray;
+  background:red;
   border-radius: 0px 0px 10px 10px;
   padding: 5px 10px;
   //position: relative;
   z-index: 9999999999999;
 }
 .css-authenticated{
-  background:gray;
+  background:#F6F6F6;
   .css-account-container{
     -webkit-transition-property: top;
     -webkit-transition-duration: .6s;
@@ -47,7 +49,6 @@ body{
     z-index: 999999999;
     form{
       padding: 15px;
-    display:none;
     }
   }
 }
@@ -68,7 +69,6 @@ body{
     z-index: 999999999;
     form{
       padding: 15px;
-    display:none;
     }
   }
 }
@@ -78,11 +78,7 @@ body{
   overflow: hidden;
   .css-label{
     float: left;
-  }
-  input{
-    //float: right;
-    height:2em;
-    width:100%;
+    margin:.2em 0em 0em 0em;
   }
   .css-clear{
     clear: both;
@@ -97,5 +93,27 @@ body{
   }
 }
 .css-heading-notification{
-  background:#ffc;  
+  background: #ffc;
+  height: 1em;
+  padding: 1em;
+}
+input {
+height: 2em;
+width: 100%;
+border: solid 1px rgb(226, 226, 226);
+border-radius: 3px;
+}
+.css-submit {
+  width: auto;
+  background:#75CAD8;
+  height: 2.5em;
+  border: none;
+  color:#fff;
+}
+hr {
+border-left: none;
+border-right: none;
+border-top: #fff 1px solid;
+border-top: #E9E9E9 solid 1px;
+width: 100%;
 }
