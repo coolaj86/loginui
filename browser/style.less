@@ -4,15 +4,11 @@ body{
   font-family: "Play";
   background-color: #23241f;
   background-image: url('../images/dark_mosaic.png');
-  color:#666;
 }
 .css-authenticated {
-  //position: absolute;
-  background:#F6F6F6;
+  position: absolute;
   top: 0px;
   right: 10px;
-  width:20%;
-  padding:0em 1em 1em 1em;
 }
 .css-login-hidden {
   top: -250px!important;
@@ -27,24 +23,23 @@ body{
 .css-main {
   -webkit-transition-property: width;
   -webkit-transition-duration: 1s;
-  background:red;
+  background: gray;
   border-radius: 0px 0px 10px 10px;
   padding: 5px 10px;
-  //position: relative;
+  position: relative;
   z-index: 9999999999999;
 }
 .css-authenticated{
+  background: blue;
   .css-account-container{
     -webkit-transition-property: top;
     -webkit-transition-duration: .6s;
     -webkit-transition-timing-function: ease-out;
-    background:#F6F6F6;
-    top: 0px;
-    right: 10px;
-    width:20%;
-    padding:0em 1em 1em 1em;
+    width: 100%;
+    background: lightgray;
+    border-radius: 10px;
     overflow: hidden;
-    //position: absolute;
+    position: absolute;
     top: 5px;
     right: 0px;
     padding-top: 20px;
@@ -64,7 +59,7 @@ body{
     background: lightgray;
     border-radius: 10px;
     overflow: hidden;
-    //position: absolute;
+    position: absolute;
     top: 5px;
     right: 0px;
     padding-top: 20px;
@@ -80,7 +75,9 @@ body{
   overflow: hidden;
   .css-label{
     float: left;
-    margin:.2em 0em 0em 0em;
+  }
+  input{
+    //float: right;
   }
   .css-clear{
     clear: both;
@@ -94,28 +91,4 @@ body{
     width: 50%;
   }
 }
-.css-heading-notification{
-  background: #ffc;
-  height: 1em;
-  padding: 1em;
-}
-input {
-height: 2em;
-width: 100%;
-border: solid 1px rgb(226, 226, 226);
-border-radius: 3px;
-}
-.css-submit {
-  width: auto;
-  background:#75CAD8;
-  height: 2.5em;
-  border: none;
-  color:#fff;
-}
-hr {
-border-left: none;
-border-right: none;
-border-top: #fff 1px solid;
-border-top: #E9E9E9 solid 1px;
-width: 100%;
-}
+
