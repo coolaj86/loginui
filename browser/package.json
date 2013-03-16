@@ -7,7 +7,7 @@
     "type": "git",
     "url": "git://github.com/coolaj86/loginui.git"
   },
-  "main": "lib/browser",
+  "main": "browser.js",
   "lib": "lib",
   "scripts": {
     "test": "run-tests"
@@ -28,7 +28,8 @@
     "json-storage": ">=1.1.2 <1.2.0"
   },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+  },
   "optionalDependencies": {},
   "engines": {
     "node": "*"

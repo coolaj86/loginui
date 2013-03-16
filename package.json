@@ -8,13 +8,13 @@
     "url": "git://github.com/FOO-G-ORG/FOO-G-REPO.git"
   },
   "bin": {
-    "FOO-APP-server": "bin/server.js"
+    "loginui-server": "bin/server.js"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
   "scripts": {
-    "prepublish": "node deploy"
+    "prepublish": "grunt build"
   },
   "dependencies": {
     "connect": "2.x",
@@ -29,8 +29,15 @@
     "json-storage": ">=1.1.2 <1.2.0",
     "ahr": ">=3.0.0-rc.2 <3.1.0"
   },
-  "main": "server/server",
-  "devDependencies": {},
+  "main": "server",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-watch": "~0.3.1",
+    "grunt-contrib-jade": "~0.5.0",
+    "grunt-contrib-less": "~0.5.0",
+    "grunt-pakmanager": "~0.2.2",
+    "grunt-develop": "0.0.2"
+  },
   "optionalDependencies": {},
   "engines": {
     "node": "*"

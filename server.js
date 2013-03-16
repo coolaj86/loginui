@@ -1,5 +1,3 @@
-/*jshint strict:true node:true es5:true onevar:true laxcomma:true laxbreak:true
-eqeqeq:true immed:true latedef:true unused:true undef:true*/
 /*
  * SERVER
  */
@@ -10,7 +8,7 @@ eqeqeq:true immed:true latedef:true unused:true undef:true*/
   var PREAUTH = {}
     , MIN_PASSPHRASE_LEN = 5
     , request = require('ahr')
-    , steve = require('./steve')
+    , steve = require('./lib/steve')
     , path = require('path')
     , connect = require('connect')
     , crypto = require('crypto')
