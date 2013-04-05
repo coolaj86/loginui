@@ -375,6 +375,7 @@
 
   function addAccountInfoToSession(session, account) {
     session.uuid = account.uuid;
+    session.username = account.username;
     session.nickname = account.nickname || account.username || (account.email||'').replace(/@.*/, '');
     // The only valid use of secret as a property
     session.secret = 'otp' + account.otp;

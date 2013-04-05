@@ -208,6 +208,7 @@
 
     // effectively overwrites the current session
     request.post('/session').when(authenticatedUi);
+    fb._FB.logout();
   }
 
   function attemptCreate(ev) {
