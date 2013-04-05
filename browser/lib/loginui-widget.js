@@ -367,7 +367,7 @@
         ;
 
       if (accessToken) {
-        request.post(href, null, body);
+        request.post(href, null, body).when(authenticatedUi);
       } else {
         authenticatedUi(null, null, { success: false, errors: [ new Error('bad facebook auth') ] });
       }
