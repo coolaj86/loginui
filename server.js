@@ -429,6 +429,7 @@
       return;
     }
 
+    account.username = account.username || account.email;
     if (!account.username) {
       res.error('no username');
     } else if (getUserAlias(account.email)) {

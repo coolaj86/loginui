@@ -225,10 +225,6 @@
     if (!obj.nickname) {
       console.log('no nickname, no biggie');
     }
-    if (!obj.username) {
-      err = new Error('no username');
-      console.error(err);
-    }
     if (!/.+@.+\..+/.test(obj.email)) {
       err = new Error('no email');
       console.error(err);
