@@ -1,12 +1,13 @@
-/*jshint strict:true jquery:true browser:true node:true es5:true
-onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
 /*
  * BROWSER
  */
+// Docs
+// https://developers.facebook.com/tools/explorer/
+// https://developers.facebook.com/docs/reference/javascript/#graphapi
 (function () {
   "use strict";
 
-  var $ = require('ender')
+  var $ = require('jQuery')
     /*
     , noObj = {}
     , noOp = function () {}
@@ -14,7 +15,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
     , pure = require('pure').$p
     , oldHttp
     */
-    , domReady = require('domready')
+    , domReady = $
     , url = require('url')
     , store = require('json-storage').create(require('localStorage'))
     , location = require('location')
@@ -62,35 +63,49 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
   // if the Token is bad, the server will respond with a different guest token
   function initialLogin() {
     var login = store.get('login') || {}
-      , urlObj = {
-            protocol: location.protocol
-          , hostname: location.hostname
-          , port: location.port
-          , pathname: '/session'
-        }
       , href
+      , urlObj
       ;
 
+    urlObj = {
+        protocol: location.protocol
+      , hostname: location.hostname
+      , port: location.port
+      , pathname: '/session'
+    };
+
+    // returns access token or undefined (i.e. not logged in or expired)
+    fb.getAccessToken(function (accessToken) {
+      console.log('fb.getAccessToken', accessToken);
+      console.log('fb.getAuthResponse', fb._FB.getAuthResponse());
+      if (accessToken) {
+        login.auth = { type: "fb", accessToken: accessToken };
+      } else {
+        return;
+      }
+
+      urlObj.auth = null;
+      href = url.format(urlObj);
+      console.log('fb.getAccessToken', href, login);
+      /*
+      fb._FB.api('/me', function(response) {
+        console.log('fb.api.me', response);
+        login.email = response.email;
+      });
+      */
+      request.post(href, null, login).when(authenticatedUi);
+    });
+
     console.log('initialLogin');
+
+    // TODO fix this race condition
 
     if (login.username && login.secret) {
       // TODO create an ahr3 client for this
       urlObj.auth = login.username + ':' + login.secret;
       href = url.format(urlObj);
       request.post(href, null, login).when(authenticatedUi);
-      return;
     }
-
-    // returns access token or undefined
-    fb.getAccessToken(function (accessToken) {
-      if (accessToken) {
-        login.auth = { type: "fb", accessToken: accessToken };
-      }
-
-      href = url.format(urlObj);
-      console.log('fb.getAccessToken', href, login);
-      request.post(href, null, login).when(authenticatedUi);
-    });
   }
 
   function attemptLogin(ev) {
@@ -102,7 +117,12 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
     ev.preventDefault();
     ev.stopPropagation();
 
-    obj = serializeForm('form#js-auth', serializeToNativeTypes);
+    obj = serializeForm('form.js-login-email', serializeToNativeTypes);
+
+    if (!obj.username || !obj.passphrase) {
+      console.error("The form didn't get a username and passphrase. Are the class names still correct?");
+      return;
+    }
 
     urlObj = {
         protocol: location.protocol
@@ -114,14 +134,12 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
 
     href = url.format(urlObj);
 
-    console.log('attemptLogin');
+    console.log('attemptLogin', href);
     request.post(href).when(authenticatedUi);
   }
 
   function authenticatedUi(err, ahr, data) {
-    var lastUser
-      , currentUser
-      ;
+    console.log('[authenticatedUi] start');
 
     if (err) {
       console.error('had error');
@@ -138,7 +156,14 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
       return;
     }
 
-    $('.js-passphrase').forEach(function (el) {
+    var lastUser
+      , currentUser
+      , passphrases
+      ;
+
+
+    passphrases = $('.js-passphrase');
+    passphrases.forEach(function (el) {
       $(el).val('');
     });
 
@@ -147,39 +172,34 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
 
     store.set('login', currentUser);
 
-    if (!data.success) {
-      console.log('authentication failed');
-      $('.js-guest').removeClass('css-hidden');
-      $('.js-authenticated-user').addClass('css-hidden');
-
+    if (!data.success || /^guest/.test(currentUser.username)) {
       if (!lastUser || !/^guest/.exec(lastUser.username)) {
-        console.log('assuming the new guest account');
+        console.log('keeping the new guest account');
       } else {
-        console.log('resuming previous guest account');
+        console.log('reverting to the previous guest account');
         currentUser = lastUser;
         store.set('login', lastUser);
       }
+      showGuestUi(lastUser, currentUser);
     } else {
-      $('.js-close-signup-login').addClass('css-hidden');
-      $('.js-login-container').addClass('css-login-hidden');
-      $('.js-signup-container').addClass('css-login-hidden');
+      showUserUi(lastUser, currentUser);
     }
+  }
 
-    if (/^guest/.test(currentUser.username)) {
-      console.log('guest session', currentUser);
-      // TODO change to displayname
-      $('.js-nickname').text("Guest" + currentUser.username.replace(/^guest/, '').substr(0, 5));
-      $('.js-guest').removeClass('css-hidden');
-      $('.js-authenticated-user').addClass('css-hidden');
-      return;
-    }
+  function showGuestUi(lastUser, currentUser) {
+    console.log('guest session', currentUser);
+    $('.js-account-user').slideUp(function () {
+      $('.js-account-nickname').text("Guest " + currentUser.username.replace(/^guest/, '').substr(0, 5));
+      $('.js-account-guest').slideDown();
+    });
+  }
 
+  function showUserUi(lastUser, currentUser) {
     console.log('user session', currentUser);
-
-    $('.js-guest').addClass('css-hidden');
-    $('.js-authenticated-user').removeClass('css-hidden');
-
-    $('.js-nickname').text(currentUser.nickname || currentUser.username);
+    $('.js-account-guest').slideUp(function () {
+      $('.js-account-nickname').text(currentUser.nickname);
+      $('.js-account-user').slideDown();
+    });
   }
 
   function logout(ev) {
@@ -200,7 +220,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
       , err
       ;
 
-    obj = serializeForm('form#js-signup', serializeToNativeTypes);
+    obj = serializeForm('form.js-signup-email', serializeToNativeTypes);
     if (!obj.nickname) {
       console.log('no nickname, no biggie');
     }
@@ -221,7 +241,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
       return;
     }
 
-    console.log('form#js-signup');
+    console.log('form.js-signup-email');
     console.log(this);
     console.log(obj);
     request.post('/users', null, obj).when(function (err, ahr, data) {
@@ -231,7 +251,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
   }
 
   function checkUsername() {
-    var v = $('#js-signup .js-username').val()
+    var v = $('.js-signup-email .js-username').val()
       ;
 
     if (!v) {
@@ -248,7 +268,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
     $('.js-signup-submit').val('Checking...');
     // TODO show spinner
     cuToken = setTimeout(function () {
-      var val = $('#js-signup .js-username').val()
+      var val = $('.js-signup-email .js-username').val()
         ;
 
       // TODO hide spinner
@@ -306,28 +326,24 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
     var secret = $(this).val()
       ;
 
-    $('.js-passphrase').forEach(function (el) {
+    // TODO right forEach plugin for jq
+    $('.js-passphrase').each(function (i, el) {
       $(el).val(secret);
     });
   }
 
-  function hidePassphrase(ev) {
+  function togglePassphrase(ev) {
     /*jshint validthis:true*/
-    var hide = $(this).attr('checked')
+    var show = ev.target.checked
       ;
 
-    console.log('passphrase hidden', hide, ev, this);
-
-    $('.js-hide-passphrase').forEach(function (el) {
-      $(el).attr('checked', hide);
-    });
-
-    if (hide) {
-      $('.js-nopassword').addClass('css-hidden');
-      $('.js-password').removeClass('css-hidden');
+    console.log("everyday I'm togglin'", ev.target.checked, ev.target);
+    if (!show) {
+      $('.js-passphrase').show();//.removeClass('css-hidden');
+      $('.js-passphrase2').hide();//.addClass('css-hidden');
     } else {
-      $('.js-password').addClass('css-hidden');
-      $('.js-nopassword').removeClass('css-hidden');
+      $('.js-passphrase').hide();//.addClass('css-hidden');
+      $('.js-passphrase2').show();//.removeClass('css-hidden');
     }
   }
   
@@ -338,6 +354,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
     console.log('click', '.js-fb-connect');
     // TODO this theoretically might not be ready
     fb.login(function (accessToken) {
+      console.log('got fb response');
       var urlObj = {
               protocol: location.protocol
             , hostname: location.hostname
@@ -357,26 +374,31 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
   }
 
   function initEvents() {
-    $('body').on('click', '.js-logout', logout);
-    $('body').on('click', '.js-show-account', showAccount);
+    $('body').on('click', '.js-account-logout', logout);
     $('body').on('click', '.js-fb-connect', fbLogin);
-    $('body').on('submit', 'form#js-account', updateAccount);
-    $('body').on('submit', 'form#js-auth', attemptLogin);
-    $('body').on('submit', 'form#js-signup', attemptCreate);
-    $('body').on('keyup', 'form#js-signup .js-username', checkUsername);
-    $('body').on('click', '.js-show-signup', showSignup);
-    $('body').on('click', '.js-show-login', showLogin);
-    $('body').on('click', '.js-close-signup-login', hideLoginSignup);
+    $('body').on('submit', 'form.js-login-email', attemptLogin);
+    $('body').on('submit', 'form.js-signup-email', attemptCreate);
     $('body').on('keyup', '.js-passphrase', copyPassphrase);
-    $('body').on('change', '.js-hide-passphrase', hidePassphrase);
+    $('body').on('change', '.js-toggle-passphrase', togglePassphrase);
+    //$('.js-passphrase2').hide();//addClass('css-hidden');
 
-    $('.js-account-container').addClass('css-login-hidden');
-    $('.js-signup-container').addClass('css-login-hidden');
-    $('.js-login-container').addClass('css-login-hidden');
-    $('.js-login-container').addClass('css-login-hidden');
-    $('.js-close-signup-login').addClass('css-hidden');
-    $('.js-password').addClass('css-hidden');
-    $('.js-signup-submit').attr('disabled', 'disabled');
+    // Tabby thingies
+    //$('body').on('click', '.js-show-account', showAccount);
+    //$('body').on('click', '.js-show-signup', showSignup);
+    //$('body').on('click', '.js-show-login', showLogin);
+    //$('body').on('click', '.js-close-signup-login', hideLoginSignup);
+
+    // TODO
+    //$('body').on('keyup', 'form.js-signup-email .js-username', checkUsername);
+    // TODO
+    //$('body').on('submit', 'form#js-account', updateAccount);
+
+    //$('.js-account-container').addClass('css-login-hidden');
+    //$('.js-signup-container').addClass('css-login-hidden');
+    //$('.js-login-container').addClass('css-login-hidden');
+    //$('.js-login-container').addClass('css-login-hidden');
+    //$('.js-close-signup-login').addClass('css-hidden');
+    //$('.js-signup-submit').attr('disabled', 'disabled');
 
     // Cases to handle:
     // * This browser has no OTP (or it is invalid)
@@ -388,6 +410,7 @@ onevar:true laxcomma:true laxbreak:true undef:true latedef:true unused:true*/
     //   ??. Try facebook, ask to merge
     // * This browser has a (valid) User OTP
     //   1. The app logs in. Done
+    console.log("running el widget");
     initialLogin();
   }
 

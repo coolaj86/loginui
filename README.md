@@ -15,7 +15,14 @@ API
   * `POST /sessions HEADER Authorization: Basic ...`
     * returns authenticated session (or a guest on failure)
 
-Facebook
+Demo
+===
+
+    grunt build
+    node bin/server
+    # access at localhost:5599
+
+Facebook Docs
 ===
 
 https://developers.facebook.com/docs/howtos/login/getting-started/

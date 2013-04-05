@@ -12,11 +12,12 @@
     , path = require('path')
     , connect = require('connect')
     , crypto = require('crypto')
+    , UUID = require('node-uuid')
     , app = connect.createServer()
     , store = require('json-storage').create(require('dom-storage').create(
-        path.join(__dirname, '..', 'var', 'users.db.json')
+        path.join(__dirname, 'var', 'users.db.json')
       ))
-    , db = {
+    , demoDb = {
           "coolaj86": {
               "passphrase": "secret"
             , "username": "coolaj86"
@@ -24,18 +25,17 @@
             , "nickname": "AJ"
             //, "otp": "0123456789abcdef"
             , "salt": null
+            , "uuid": "633e1bf2-2b34-4ccf-a856-2574a8d622a6"
           }
         , "foo": {
               "passphrase": "secret"
             , "username": "foo"
             //, "otp": "0123456789abcdef"
             , "salt": null
+            , "uuid": "0c452f97-9ea6-4c2c-9a11-ec23d43754de"
           }
       }
     ;
-
-  store.set('coolaj86', db.coolaj86);
-  store.set('foo', db.foo);
 
   function randomString(len) {
     var i
@@ -79,6 +79,74 @@
   }
 */
 
+  function setUserAccount(account) {
+    if (!account.aliases) {
+      account.aliases = {};
+    }
+    if (account.email) {
+      setUserAlias(account.email, account);
+    }
+    if (account.username) {
+      setUserAlias(account.username, account);
+    }
+    store.set(account.uuid, account);
+  }
+
+  function setUserAlias(newId, userObject) {
+    if (!userObject.uuid) {
+      userObject.uuid = UUID.v4();
+      store.set(userObject.uuid, userObject);
+      if (userObject.username) {
+        store.set(userObject.username, { alias: userObject.uuid });
+      }
+      if (userObject.email) {
+        store.set(userObject.email, { alias: userObject.uuid });
+      }
+    }
+
+    // no sense in setting an user account to null
+    if (newId && newId !== userObject.uuid) {
+      userObject.aliases[newId] = 1;
+      store.set(newId, { alias: userObject.uuid });
+    }
+  }
+
+  function getUserAlias(id) {
+    if (!id) {
+      return null;
+    }
+    return store.get(id);
+  }
+
+  function mergeAccounts(primary, old) {
+    old.aliases = old.aliases || {};
+    Object.keys(old.aliases).forEach(function (aliasname) {
+      setUserAlias(old.aliases[aliasname], primary);
+    });
+
+    old.auths = old.auths || [];
+    primary.auths = primary.auths || [];
+    primary.auths = primary.auths.concat(old.auths);
+
+    Object.keys(old).forEach(function (key) {
+      primary[key] = primary[key] || old[key];
+    });
+    // TODO save the data
+    setUserAlias(old.uuid, primary);
+  }
+
+  function formatFbDate(fbBirthday) {
+    var parts = (fbBirthday||'').split('/').reverse()
+      , newParts = []
+      ;
+
+    newParts[0] = parts[0]; // year
+    newParts[1] = parts[2]; // month
+    newParts[2] = parts[1]; // day
+
+    return newParts.join('-');
+  }
+
   function fbCreateUser(fn, fbData) {
     //
     function mergeOrCreate(err, account) {
@@ -87,7 +155,7 @@
               email: fbData.email
             , nickname: fbData.first_name + ' ' + fbData.last_name
             , gender: fbData.gender
-            , birthday: (fbData.birthday||'').split('/').reverse().join('-')
+            , birthday: formatFbDate(fbData.birthday)
             , auths: [{
                   type: 'fb'
                 , id: fbData.id
@@ -101,30 +169,31 @@
         account = null;
       }
 
-      // create a user as long as one doesn't exist by the same name
-      [fbData.username, fbData.email.replace(/@.*/, '')].some(function (uid) {
-        if(uid && !checkUser(uid)) {
-          fbid = uid;
-          return true;
-        }
-      });
-
       if (!account) {
+        console.log('[FB][USER] create!');
         // TODO allow multiple e-mails
+        // create a user as long as one doesn't exist by the same name
+        [fbData.email/*, fbData.username*/].some(function (uid) {
+          if(uid && !checkUser(uid)) {
+            fbid = uid;
+            return true;
+          }
+        });
         account = createUser(fbid, null, newAccount);
       } else {
+        console.log('[FB][USER] merge!');
         mergeAccounts(account, newAccount);
       }
 
       console.log('saving account', 'fb:' + fbData.id, account);
-      store.set('fb:' + fbData.id, { alias: account.username });
+      setUserAlias('fb:' + fbData.id, account);
       fn(null, account);
     }
 
     // This is kinda sketch.
     // We're trusting that if a user verified their e-mail
     // via facebook that it's good enough for us as well
-    retrieveUser(mergeOrCreate, fbData.email, PREAUTH);
+    directRetrieveUser(mergeOrCreate, fbData.email);
   }
 
   function fbAuth(fn, YOUR_USER_ACCESS_TOKEN) {
@@ -146,34 +215,46 @@
         return;
       }
 
-      retrieveUser(function (err, account) {
+      function returnOrCreateUser(err, account) {
         if (!err) {
+          console.log('[FB][USER] found');
           fn(err, account);
           return;
         }
         
+        console.log('[FB][USER] create? or merge?');
         fbCreateUser(fn, fbData);
-      }, 'fb:' + fbData.id, PREAUTH);
+      }
+
+      directRetrieveUser(returnOrCreateUser, 'fb:' + fbData.id);
     });
   }
 
   function altAuth(fn, req) {
     if ('fb' === req.body.auth.type) {
+      console.log('[AUTH][FB]');
       fbAuth(fn, req.body.auth.accessToken);
     } else {
+      console.log('[AUTH][UNKNOWN]');
       fn(new Error('unrecognized authorization type ' + req.body.auth.type));
     }
   }
 
-  function retrieveUser(fn, username, pass) {
+  function directRetrieveUser(fn, userAlias) {
+    retrieveUser(fn, userAlias, PREAUTH);
+  }
+
+  // Recursively searches aliases to find account
+  // TODO update to new alias if multi-recursion happens
+  function retrieveUser(fn, userAlias, pass) {
     var account
       , err
       ;
 
-    account = store.get(username);
+    account = getUserAlias(userAlias);
     if (!account) {
-      console.log(typeof username, username);
-      err = new Error('No user ' + username);
+      console.log(typeof userAlias, userAlias);
+      err = new Error('No user ' + userAlias);
       console.warn('163', err.message);
       fn(err);
       return;
@@ -189,7 +270,7 @@
       account.passphrase = hashSecret(account.passphrase, account.salt);
     }
 
-    console.log(pass.length, pass.toString().substr(0, 3));
+    console.log('pass.length, pass.substr', pass.length, pass);//.toString().substr(0, 3));
     console.log('client     :', pass);
     console.log('client+salt:', hashSecret(pass, account.salt));
     console.log('original   :', account.otp);
@@ -213,19 +294,20 @@
 
     console.log('looks like success');
     account.otp = account.otp || randomString(255);
-    store.set(username, account);
+    setUserAccount(account);
     fn(null, account);
   }
 
   function httpAuth(_fn, req) {
     var token
-      , username
+      , userAlias
       , pass
       , basicAuthB64
       , fn = function () {
-          var args = [].slice(arguments)
+          var args = [].slice.call(arguments)
             ;
 
+          console.log('args', args);
           process.nextTick(function () {
             _fn.apply(null, args);
           });
@@ -235,27 +317,32 @@
     basicAuthB64 = (req.headers.authorization||"").replace(/\s*Basic\s+/i, '');
     token = (new Buffer(basicAuthB64, "base64"))
       .toString('utf8')
+                  // a username may not contain ':', but a password may
       .split(/:/) // not g
       ;
 
-    username = token.shift(); // TODO disallow ':' in username
+    console.log('token', token);
+    userAlias = token.shift(); // TODO disallow ':' in username
     pass = token.join(':'); // a password might have a ':'
 
-    retrieveUser(fn, username, pass);
+    retrieveUser(fn, userAlias, pass);
   }
 
+  // 'username' is just servers as human-readable unique id
+  // it's fine for it to be an e-mail
   function createUser(username, passphrase, extra) {
     var user = true
       , account
       , salt = randomString(255)
       ;
 
-    if (username && store.get(username)) {
+    // unset username if user by that name exists
+    if (username && getUserAlias(username)) {
       username = undefined;
     }
     while (user) {
       username = username || ('guest' + Math.floor(Math.random() * 1000000000000));
-      user = store.get(username);
+      user = getUserAlias(username);
     }
 
     if (passphrase && passphrase.length < MIN_PASSPHRASE_LEN) {
@@ -281,13 +368,14 @@
 
     account.otp = account.otp || randomString(255);
 
-    store.set(account.username, account);
-    store.set(account.email, { alias: account.username });
+    setUserAccount(account);
+    setUserAlias(account.email, account);
     return account;
   }
 
   function addAccountInfoToSession(session, account) {
-    session.username = account.username;
+    session.uuid = account.uuid;
+    session.nickname = account.nickname || account.username || (account.email||'').replace(/@.*/, '');
     // The only valid use of secret as a property
     session.secret = 'otp' + account.otp;
     session.createdAt = account.createdAt;
@@ -303,11 +391,13 @@
       ;
 
     function finishHim(err, account) {
+      console.log('[AUTH][END]', err, account);
       if (err) {
-        res.error('authentication did not complete (creating a guest)');
+        res.error('[AUTH][GUEST] authentication did not complete (creating a guest)');
       }
       if (!account) {
         // TODO url mangle as to fall through to a create user route?
+        console.log('[AUTH][GUEST] create');
         account = createUser();
       }
 
@@ -316,16 +406,16 @@
     }
 
     if (req.headers.authorization) {
+      console.log('[AUTH][HTTP]', req.headers.authorization);
       account = httpAuth(finishHim, req);
     } else if (req.body.auth) {
+      console.log('[AUTH][ALT]');
       account = altAuth(finishHim, req);
     } else {
       // Guest
+      console.log('[AUTH][GUEST]');
       finishHim();
     }
-  }
-
-  function mergeAccounts(primary, old) {
   }
 
   function restfullyCreateUser(req, res) {
@@ -340,7 +430,7 @@
 
     if (!account.username) {
       res.error('no username');
-    } else if (store.get(account.username)) {
+    } else if (getUserAlias(account.email)) {
       // TODO add a code for easy 'iforgot' prompt
       // TODO the user gets the account, but it must be renamed
       // TODO if the password matches, respond as a a login attempt
@@ -361,22 +451,60 @@
     res.json(req.session);
   }
 
-  function checkUser(username) {
-    return store.get(username);
+  function checkUser(alias) {
+    return !!getUserAlias(alias);
   }
 
-  function checkOrGetUser(req, res) {
-    // The user is NOT the authenticated user
-    if (req.session.username !== req.params.id) {
-      res.json(!!checkUser(req.params.id));
+  function isLoggedIn(fn, loggedInId, otherId) {
+    // TODO could there be an id 0?
+    if (!loggedInId || !otherId) {
+      console.log("missing ids");
+      process.nextTick(function () {
+        fn(false);
+      });
       return;
     }
 
-    // The user IS the authenticated user
-    res.json(checkUser(req.params.id));
+    directRetrieveUser(function (err, accountA) {
+      directRetrieveUser(function (err, accountB) {
+        if (!accountA || !accountB) {
+          console.log('no accounts');
+          fn(false);
+          return;
+        }
+        if (accountA.uuid === accountB.uuid) {
+          console.log('working as hoped');
+          fn(true);
+        } else {
+          console.log("accounts are different");
+          console.log("account A");
+          console.log(accountA);
+          console.log("account B");
+          console.log(accountB);
+          fn(false);
+        }
+      }, otherId);
+    }, loggedInId);
   }
 
   function router(rest) {
+    function checkOrGetUser(req, res) {
+      isLoggedIn(function (loggedIn) {
+        // The user is NOT the authenticated user
+        if (!loggedIn) {
+          res.json(checkUser(req.params.id));
+          return;
+        }
+
+        // The user IS the authenticated user
+        function respondWithAccount(err, account) {
+          console.log(account);
+          res.json(account);
+        }
+        directRetrieveUser(respondWithAccount, req.params.id);
+      }, req.session.uuid, req.params.id);
+    }
+
     // This will create a guest user if no user is available
     rest.post('/session', restfullyAuthenticateSession);
     rest.post('/sessions', restfullyAuthenticateSession);
@@ -387,6 +515,9 @@
 
     rest.get('/users/:id', checkOrGetUser);
   }
+
+  setUserAccount(demoDb.coolaj86);
+  setUserAccount(demoDb.foo);
 
   app
     .use(steve)

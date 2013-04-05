@@ -1,0 +1,91 @@
+.js-account-container
+  .js-account-guest
+    .js-welcome
+      span Welcome  
+      em.js-account-nickname Guest
+      span !
+    ul.nav.nav-tabs.js-account-tabs
+      li.js-account-login.active
+        a(href="#login", data-toggle="tab") Login
+      li.js-account-create
+        a(href="#create", data-toggle="tab") Create Account
+    .tab-content
+      #login.tab-pane.active
+        .row.js-create-facebook
+          .span3
+            button.css-fb-connect.js-fb-connect(type='button').
+              Login with Facebook
+
+        hr
+
+        .row.js-ask-email
+          .span3
+            span Or use your 
+              a.js-use-email(href="#") username or email
+
+        form.js-login-email(style="display: none;")
+          .row
+            .span3
+              span Email or Username
+          .row
+            .span3
+              input(name="username", type="text", placeholder="ex: john.doe@example.com")
+
+          .row
+            .span3
+              span Passphrase (
+              a(href="#forgot") forgot?
+              span )
+
+          .row
+            .span3
+              input(name="passphrase", type="password", placeholder="**************").js-passphrase
+
+          .row
+            .span3
+              button(type="submit").js-account-create Login
+
+      #create.tab-pane
+        .row.js-create-facebook
+          .span3
+            button.css-fb-connect.js-fb-connect(type='button').
+              Connect with Facebook
+
+        hr
+
+        .row.js-ask-email
+          .span3
+            span Or use your 
+              a.js-use-email(href="#") email address
+
+        form.js-signup-email(style="display: none;")
+          .row
+            .span3
+              span Email
+          .row
+            .span3
+              input(name="username", type="email", placeholder="ex: john.doe@example.com")
+
+          .row
+            .span3
+              span Passphrase 
+              input.js-toggle-passphrase(type="checkbox")
+              span  Hide
+          .row
+            .span3
+              input(name="passphrase", type="password", style="display: none;", placeholder="**************").js-passphrase.js-passphrase2
+              input(type="text", placeholder="not hidden").js-passphrase
+
+          .row
+            .span3
+              button(type="submit").js-account-create Create Account
+
+  .js-account-user(style="display:none;")
+    .js-welcome
+      span Welcome 
+      em.js-account-nickname  nickname
+      span !
+    .js-account-chooser
+      button.js-account-details Account
+      span  
+      a.js-account-logout(href="#") logout

@@ -25,15 +25,6 @@
       cb(FB.getAccessToken());
     }
 
-    FB.getLoginStatus(function(response) {
-      console.log('Login Status:', response.status);
-      if (response.status === 'connected') {
-        // connected
-        // logged into facebook and connected to the app
-        answerHappily();
-        return;
-      }
-
       function relayFbLogin() {
         FB.login(function(response) {
           console.log('Login Result:');
@@ -47,7 +38,23 @@
         }, { scope: "email" });
       }
 
-      FB.login(relayFbLogin);
+      relayFbLogin();
+  }
+
+  function softLogin(cb) {
+    function answerHappily() {
+      cb(FB.getAccessToken());
+    }
+
+    FB.getLoginStatus(function(response) {
+      console.log('Login Status:', response.status);
+      if (response.status === 'connected') {
+        // connected
+        // logged into facebook and connected to the app
+        answerHappily();
+        return;
+      }
+
       if (response.status === 'not_authorized') {
         // not_authorized
         // logged in to facebook, but not the app
@@ -59,6 +66,7 @@
       }
       // TODO what about when the app is connected,
       // but the access token has expired?
+      answerHappily();
     });
   }
 
@@ -112,6 +120,7 @@
     FB = require('FB');
 
     FB.init({
+        // blyph.com
         appId: '191236997623684' // App ID
       //, channelUrl: '//WWW.YOUR_DOMAIN.COM/channel.html' // Channel File
       , status: true // check login status
@@ -119,6 +128,7 @@
       //, xfbml: true  // parse XFBML
     });
 
+    myFb._FB = FB;
     myFb._initialized = true;
     myFb._todo.forEach(function (fn) {
       fn();
@@ -126,4 +136,5 @@
     myFb.length = 0;
   };
   myFb.login = login;
+  myFb.softLogin = softLogin;
 }());

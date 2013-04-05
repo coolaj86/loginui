@@ -22,12 +22,13 @@
     "connect_router": "1.x",
     "connect-cookieless-session": "0.6.x",
     "nowww": "1.x",
-    "connect-pathname": "0.6.x",
+    "connect-pathname": "~1.0.0",
     "connect-xcors": "0.5.x",
     "express-chromeframe": "0.2.x",
     "dom-storage": ">=1.0.0 <1.1.0",
     "json-storage": ">=1.1.2 <1.2.0",
-    "ahr": ">=3.0.0-rc.2 <3.1.0"
+    "ahr": ">=3.0.0-rc.2 <3.1.0",
+    "node-uuid": "~1.4.0"
   },
   "main": "server",
   "devDependencies": {

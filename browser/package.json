@@ -17,10 +17,6 @@
   },
   "browserDependencies": {
     "ahr2": ">=2.3.0 <2.4.0",
-    "bonzo": "1.x",
-    "qwery": "3.x",
-    "bean": "0.4.x",
-    "domready": "0.2.x",
     "serialize-form": ">=1.1.1 <1.2.0",
     "pure": ">=2.67.0 <2.68.0",
     "url": ">=0.6.20 <0.7.0",

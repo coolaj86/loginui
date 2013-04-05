@@ -11,7 +11,14 @@ html
     script(src="bootstrap/js/bootstrap.js")
     script(src="pakmanaged.js")
   body
-    #css-body-wrapper
-      h1.css-test Login UI
-      include loginui
-
+    header
+      h1 Login UI
+    .container
+      .row
+        .span3
+          include loginui2
+        .span9
+          span yada
+    footer
+      small Copyright 2013 AJ ONeal
+    include fb
