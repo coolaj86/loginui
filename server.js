@@ -37,6 +37,18 @@
       }
     ;
 
+  function addAccountInfoToSession(session, account) {
+    session.uuid = account.uuid;
+    session.gravatar = account.gravatar;
+    session.username = account.username;
+    session.nickname = account.nickname || account.username || (account.email||'').replace(/@.*/, '');
+    // The only valid use of secret as a property
+    session.secret = 'otp' + account.otp;
+    session.createdAt = account.createdAt;
+    session.updatedAt = account.updatedAt;
+    session.authenticatedAt = account.authenticatedAt;
+  }
+
   function randomString(len) {
     var i
       , chars = ""
@@ -84,7 +96,14 @@
       account.aliases = {};
     }
     if (account.email) {
+      account.email = account.email.toLowerCase();
       setUserAlias(account.email, account);
+      if (!account.gravatar) {
+        account.gravatar = crypto.createHash('md5').update(account.email).digest('hex');
+      }
+    }
+    if (account.gravatar) {
+      setUserAlias(account.gravatar, account);
     }
     if (account.username) {
       setUserAlias(account.username, account);
@@ -369,20 +388,9 @@
     account.otp = account.otp || randomString(255);
 
     setUserAccount(account);
-    setUserAlias(account.email, account);
     return account;
   }
 
-  function addAccountInfoToSession(session, account) {
-    session.uuid = account.uuid;
-    session.username = account.username;
-    session.nickname = account.nickname || account.username || (account.email||'').replace(/@.*/, '');
-    // The only valid use of secret as a property
-    session.secret = 'otp' + account.otp;
-    session.createdAt = account.createdAt;
-    session.updatedAt = account.updatedAt;
-    session.authenticatedAt = account.authenticatedAt;
-  }
 
   // steve's cookieless-session does the magic
   // we just have to auth if credentials are given
@@ -489,24 +497,24 @@
     }, loggedInId);
   }
 
+  function checkOrGetUser(req, res) {
+    isLoggedIn(function (loggedIn) {
+      // The user is NOT the authenticated user
+      if (!loggedIn) {
+        res.json(checkUser(req.params.id));
+        return;
+      }
+
+      // The user IS the authenticated user
+      function respondWithAccount(err, account) {
+        console.log(account);
+        res.json(account);
+      }
+      directRetrieveUser(respondWithAccount, req.params.id);
+    }, req.session.uuid, req.params.id);
+  }
+
   function router(rest) {
-    function checkOrGetUser(req, res) {
-      isLoggedIn(function (loggedIn) {
-        // The user is NOT the authenticated user
-        if (!loggedIn) {
-          res.json(checkUser(req.params.id));
-          return;
-        }
-
-        // The user IS the authenticated user
-        function respondWithAccount(err, account) {
-          console.log(account);
-          res.json(account);
-        }
-        directRetrieveUser(respondWithAccount, req.params.id);
-      }, req.session.uuid, req.params.id);
-    }
-
     // This will create a guest user if no user is available
     rest.post('/session', restfullyAuthenticateSession);
     rest.post('/sessions', restfullyAuthenticateSession);
